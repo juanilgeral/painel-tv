@@ -147,7 +147,7 @@
   const GID_FRASES       = '867030255';
   const GID_ANIVERSARIOS = '61536774';
   const SYNC_INTERVAL    = 2 * 60 * 1000;
-  const JBFM_STREAM      = 'https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac';
+  const JBFM_STREAM      = 'https://27613.live.streamtheworld.com/JBFMAAC.aac';
 
   // Planilha de controle remoto — aba CONTROLE com colunas: ACAO | VALOR
   // Ações suportadas: radio_on, radio_off, video_url, parar
@@ -208,7 +208,15 @@
     audio.src = JBFM_STREAM;
     audio.play()
       .then(() => { radioAtiva = true; setStatus('📻 JB FM ao vivo', true); })
-      .catch(() => setStatus('❌ Erro ao carregar JB FM'));
+      .catch(() => {
+        // Fallback: YouTube canal JB FM ao vivo
+        const wrap = document.getElementById('player-video-wrap');
+        document.getElementById('player-video-inner').innerHTML =
+          `<iframe src="https://www.youtube.com/embed/live_stream?channel=UCGx9DjFQ6dzBMkIPibPiHOg&autoplay=1&mute=0" allow="autoplay; fullscreen" allowfullscreen style="width:100%;height:100%;border:none;background:#000" data-retomar="false"></iframe>`;
+        wrap.style.display = 'none'; // invisível — só áudio
+        radioAtiva = true;
+        setStatus('📻 JB FM ao vivo', true);
+      });
   }
 
   // ── Tocar URL ────────────────────────────────────
