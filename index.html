@@ -281,7 +281,15 @@
   // ── CSV ───────────────────────────────────────────
   async function fetchCSV(gid) {
     try {
-      const resp = await fetch(CSV_BASE + '&gid=' + gid + '&cachebust=' + Date.now());
+      const url = CSV_BASE + '&gid=' + gid + '&cachebust=' + Date.now();
+      // Tenta direto primeiro, se falhar usa proxy CORS
+      let resp;
+      try {
+        resp = await fetch(url);
+        if (!resp.ok) throw new Error('direct failed');
+      } catch(e) {
+        resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      }
       const text = await resp.text();
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) return [];
