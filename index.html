@@ -153,7 +153,7 @@
   const GID_TICKER       = '1371337128';
   const GID_FRASES       = '867030255';
   const GID_ANIVERSARIOS = '61536774';
-  const SYNC_INTERVAL    = 2 * 60 * 1000;
+  const SYNC_INTERVAL    = 5 * 60 * 1000;
   const JBFM_STREAM      = 'https://27613.live.streamtheworld.com/JBFMAAC.aac';
 
   // Planilha de controle remoto — aba CONTROLE com colunas: ACAO | VALOR
@@ -420,8 +420,13 @@
   }
 
   // ── Sincronizar ───────────────────────────────────
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
   async function sincronizar() {
-    await Promise.all([carregarAvisos(),carregarTicker(),carregarFrase(),carregarAniversarios()]);
+    await carregarAvisos();   await sleep(1500);
+    await carregarTicker();   await sleep(1500);
+    await carregarFrase();    await sleep(1500);
+    await carregarAniversarios();
   }
 
   async function cicloCompleto() {
@@ -437,7 +442,7 @@
       cicloCompleto();
       setInterval(cicloCompleto, SYNC_INTERVAL);
       // Controle remoto verifica a cada 15 segundos
-      setInterval(verificarControle, 15 * 1000);
+      setInterval(verificarControle, 30 * 1000);
       // Toca rádio automaticamente após 2s (Fully Kiosk permite)
       setTimeout(() => tocarRadio(), 2000);
     } else {
