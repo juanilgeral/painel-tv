@@ -318,15 +318,27 @@
   async function fetchCSV(gid) {
     try {
       const url = CSV_BASE + '&gid=' + gid + '&cachebust=' + Date.now();
-      // Tenta direto primeiro, se falhar usa proxy CORS
-      let resp;
+      let text = null;
+      // Tenta direto
       try {
-        resp = await fetch(url);
-        if (!resp.ok) throw new Error('direct failed');
-      } catch(e) {
-        resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+        const r = await fetch(url, {redirect: 'follow'});
+        if (r.ok) text = await r.text();
+      } catch(e) {}
+      // Fallback proxy 1
+      if (!text) {
+        try {
+          const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+          if (r.ok) text = await r.text();
+        } catch(e) {}
       }
-      const text = await resp.text();
+      // Fallback proxy 2
+      if (!text) {
+        try {
+          const r = await fetch('https://thingproxy.freeboard.io/fetch/' + url);
+          if (r.ok) text = await r.text();
+        } catch(e) {}
+      }
+      if (!text) return [];
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) return [];
       return lines.slice(3).map(line => {
