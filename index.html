@@ -200,7 +200,7 @@
     const sx=window.innerWidth/1920, sy=window.innerHeight/1080;
     const s=Math.max(sx,sy);
     const ox=(window.innerWidth-1920*s)/2;
-    const oy=(window.innerHeight-1080*s)/2;
+    const oy=Math.max(0,(window.innerHeight-1080*s)/2);
     w.style.transform='translate('+ox+'px,'+oy+'px) scale('+s+')';
     
   }
