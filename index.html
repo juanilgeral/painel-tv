@@ -164,9 +164,11 @@
   function ajustarEscala(){
     const w=document.getElementById('scale-wrap');
     const sx=window.innerWidth/1920, sy=window.innerHeight/1080;
-    const s=Math.max(sx,sy);
+    const s=Math.min(sx,sy);
     const ox=(window.innerWidth-1920*s)/2, oy=(window.innerHeight-1080*s)/2;
     w.style.transform='translate('+ox+'px,'+oy+'px) scale('+s+')';
+    // Fundo preto nas bordas
+    document.body.style.background='#000';
   }
   ajustarEscala(); window.addEventListener('resize',ajustarEscala);
 
