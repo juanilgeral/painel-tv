@@ -241,8 +241,12 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   async function fetchCSV(gid){
     try{
       const url=CSV_BASE+'&gid='+gid+'&single=true';let text=null;
-      try{const r=await fetch(url,{redirect:'follow'});if(r.ok)text=await r.text();}catch(e){}
+      // Tentativa 1 — direto
+      try{const r=await fetch(url,{redirect:'follow',cache:'no-store'});if(r.ok)text=await r.text();}catch(e){}
+      // Tentativa 2 — proxy allorigins
       if(!text){try{const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url));if(r.ok)text=await r.text();}catch(e){}}
+      // Tentativa 3 — proxy corsproxy
+      if(!text){try{const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));if(r.ok)text=await r.text();}catch(e){}}
       if(!text)return[];
       const lines=text.split(/\r?\n/).filter(l=>l.trim());
       if(lines.length<2)return[];
@@ -261,7 +265,11 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
 
   async function verificarControle(){
     const rows=await fetchCSV(GID_CONTROLE);
-    if(!rows.length)return;
+    if(!rows.length){
+      document.getElementById('frase-texto').textContent='"O sucesso e a soma de pequenos esforcos repetidos dia apos dia."';
+      document.getElementById('frase-autor').textContent='— Robert Collier';
+      return;
+    }
     const acao=(rows[0][0]||'').trim().toLowerCase(),valor=(rows[0][1]||'').trim();
     const chave=acao+'|'+valor+'|'+rows.length;
     if(chave===ultimoControle)return;
@@ -286,7 +294,10 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
       const titulo=(r[0]||'').replace(/^[^\w\s]+/,'').trim()||r[0];
       lista.push({titulo:titulo,texto:r[1]||'',icone:icones[tipo]||'📌',tag:tags[tipo]||'Aviso'});
     });
-    if(!lista.length)lista.push({titulo:'Bem-vindo!',texto:'Carregando...',icone:'👋',tag:'Aviso'});
+    if(!lista.length){
+      lista.push({titulo:'Bem-vindo!',texto:'Painel de Comunicacao da Juanil Transportes e Locacoes.',icone:'👋',tag:'Aviso'});
+      lista.push({titulo:'Informativo',texto:'Os avisos serao carregados em breve. Verifique a conexao com a internet.',icone:'📌',tag:'Aviso'});
+    }
     avisos=lista;clearTimeout(avisoTimer);avisoIdx=0;mostrarAviso(avisos[0]);
   }
 
@@ -332,6 +343,16 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
   async function sincronizar(){await carregarAvisos();await sleep(1200);await carregarTicker();await sleep(1200);await carregarFrase();await sleep(1200);await carregarAniversarios();}
   async function cicloCompleto(){await sincronizar();await verificarControle();}
+
+  // Retentar se avisos ainda estiverem carregando após 15s
+  setTimeout(async()=>{
+    if(document.getElementById('aviso-titulo').textContent==='Carregando...'){
+      await carregarAvisos();
+    }
+    if(document.getElementById('frase-texto').textContent==='Carregando...'){
+      await carregarFrase();
+    }
+  },15000);
 
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',()=>{initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,30*1000);setTimeout(()=>tocarRadio(),2000);});
