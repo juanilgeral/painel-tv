@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--azul:#0d2348;--azul2:#1a3a6b;--azul3:#2457a4;--acc:#f0a500;--text:#ffffff;--muted:#a0b4cc;}
-    html,body{width:100vw;height:100vh;overflow:hidden;margin:0;padding:0;background:#0d1a2e;}
+    html,body{width:100vw;height:100vh;overflow:hidden;margin:0;padding:0;background:var(--azul2);}
 
     #scale-wrap{
       width:1920px;height:1080px;
@@ -30,11 +30,11 @@
     }
     #logo-wrap img{height:72px;object-fit:contain;}
     #header-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;}
-    #header-center h1{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:var(--acc);letter-spacing:4px;text-transform:uppercase;margin:0;}
+    #header-center h1{font-family:'Barlow Condensed',sans-serif;font-size:50px;font-weight:900;color:var(--acc);letter-spacing:4px;text-transform:uppercase;margin:0;}
     #header-center small{display:block;font-size:16px;color:var(--muted);letter-spacing:3px;margin-top:4px;}
     #relogio-wrap{text-align:right;}
-    #relogio{font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:900;color:var(--acc);line-height:1;}
-    #data-label{font-size:16px;color:var(--muted);margin-top:4px;text-transform:capitalize;}
+    #relogio{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:900;color:var(--acc);line-height:1;}
+    #data-label{font-size:18px;color:var(--muted);margin-top:4px;text-transform:capitalize;}
 
     /* CORPO */
     #corpo{display:flex;flex:1;overflow:hidden;}
@@ -58,17 +58,17 @@
     #aviso-icone{font-size:80px;margin-bottom:16px;line-height:1;}
     #aviso-tag{
       font-family:'Barlow Condensed',sans-serif;
-      font-size:22px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
+      font-size:28px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
       color:var(--acc);margin-bottom:20px;
       display:flex;align-items:center;gap:12px;
     }
     #aviso-tag::before{content:'';width:24px;height:2px;background:var(--acc);}
     #aviso-titulo{
       font-family:'Barlow Condensed',sans-serif;
-      font-size:80px;font-weight:900;line-height:1.05;
+      font-size:92px;font-weight:900;line-height:1.05;
       color:var(--text);margin-bottom:22px;
     }
-    #aviso-texto{font-size:34px;line-height:1.65;color:rgba(255,255,255,.82);font-weight:300;white-space:pre-line;}
+    #aviso-texto{font-size:40px;line-height:1.65;color:rgba(255,255,255,.82);font-weight:300;white-space:pre-line;}
     #progresso-aviso{height:4px;width:0%;background:var(--acc);box-shadow:0 0 10px var(--acc);transition:width linear;flex-shrink:0;}
 
     /* VIDEO */
@@ -86,13 +86,13 @@
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     .frase-icone{font-size:40px;margin-bottom:14px;opacity:.7;}
-    #frase-texto{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:600;line-height:1.4;color:rgba(255,255,255,.9);font-style:italic;}
+    #frase-texto{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:600;line-height:1.4;color:rgba(255,255,255,.9);font-style:italic;}
     #frase-autor{margin-top:12px;font-size:18px;color:var(--muted);}
 
     /* ANIVERSARIANTES */
     #aniv-box{padding:24px 32px;border-bottom:1px solid rgba(255,255,255,.08);min-height:180px;}
     .lateral-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-    .aniv-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:20px;}
+    .aniv-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:22px;}
     .aniv-item:last-child{border:none}
     .aniv-dia{background:var(--acc);color:var(--azul);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;padding:3px 10px;border-radius:4px;min-width:50px;text-align:center;}
 
@@ -113,7 +113,7 @@
     #ticker-bar{height:68px;flex-shrink:0;display:flex;align-items:center;overflow:hidden;background:var(--azul);border-top:2px solid var(--azul3);}
     #ticker-label{background:var(--acc);color:var(--azul);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;padding:0 28px;height:100%;display:flex;align-items:center;white-space:nowrap;letter-spacing:1px;flex-shrink:0;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%);padding-right:34px;}
     #ticker-scroll{flex:1;overflow:hidden;height:100%;}
-    #ticker-text{white-space:nowrap;font-size:26px;font-weight:500;color:rgba(255,255,255,.9);animation:ticker 60s linear infinite;display:inline-block;padding-left:100%;}
+    #ticker-text{white-space:nowrap;font-size:30px;font-weight:500;color:rgba(255,255,255,.9);animation:ticker 60s linear infinite;display:inline-block;padding-left:100%;}
     @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 
     #fk-status{position:fixed;top:6px;right:10px;font-size:11px;color:rgba(255,255,255,.3);z-index:200;}
@@ -198,11 +198,11 @@
   function ajustarEscala(){
     const w=document.getElementById('scale-wrap');
     const sx=window.innerWidth/1920, sy=window.innerHeight/1080;
-    const s=Math.min(sx,sy);
+    const s=Math.max(sx,sy);
     const ox=(window.innerWidth-1920*s)/2;
     const oy=(window.innerHeight-1080*s)/2;
     w.style.transform='translate('+ox+'px,'+oy+'px) scale('+s+')';
-    document.body.style.background='#0d1a2e';
+    
   }
   ajustarEscala();
   window.addEventListener('resize',ajustarEscala);
@@ -235,7 +235,7 @@
     el.style.fontFamily="'Barlow Condensed',sans-serif";
     el.style.fontSize=a.icone.length>2?'48px':'80px';
     document.getElementById('aviso-tag').textContent=a.tag;
-    document.getElementById('aviso-titulo').textContent=a.titulo;
+    document.getElementById('aviso-titulo').textContent=a.titulo.replace(/^[^a-zA-Z0-9\u00C0-\u017E]+/,'').trim()||a.titulo;
     document.getElementById('aviso-texto').textContent=a.texto;
     const b=document.getElementById('progresso-aviso');
     b.style.transition='none'; b.style.width='0%';
