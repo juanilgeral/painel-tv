@@ -309,7 +309,10 @@
     if (!radioAtiva) setStatus('Parado');
   }
 
-  function aoTerminarVideo() { fecharVideo(); }
+  function aoTerminarVideo() {
+    if (modoPlaylist) { proximoVideo(); }
+    else { fecharVideo(); }
+  }
 
   // ── CSV ───────────────────────────────────────────
   async function fetchCSV(gid) {
@@ -341,22 +344,66 @@
 
   // ── CONTROLE REMOTO via planilha ──────────────────
   // Aba CONTROLE: coluna A = ACAO, coluna B = VALOR
-  // Ações: radio_on | radio_off | parar | video:<URL>
+  // Ações: radio_on | radio_off | parar | video | playlist
+  // Para playlist: ACAO=playlist, cada linha na col B é uma URL
+
+  let playlist       = [];   // URLs da coletânea
+  let playlistIndex  = 0;    // índice atual
+  let modoPlaylist   = false;
+
+  function proximoVideo() {
+    if (!modoPlaylist || !playlist.length) return;
+    playlistIndex = (playlistIndex + 1) % playlist.length;
+    const url = playlist[playlistIndex];
+    setStatus(`▶ Playlist ${playlistIndex+1}/${playlist.length}`, true);
+    _tocarPlaylistItem(url);
+  }
+
+  function _tocarPlaylistItem(url) {
+    const deveRetomar = radioAtiva;
+    if (radioAtiva) pararAudio();
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      tocarYoutube(url, deveRetomar);
+    } else {
+      // Arquivo — ao terminar chama proximoVideo
+      const wrap = document.getElementById('player-video-wrap');
+      document.getElementById('player-video-inner').innerHTML =
+        `<video src="${url}" autoplay style="width:100%;height:100%;object-fit:contain;background:#000" data-retomar="${deveRetomar}" onended="proximoVideo()"></video>`;
+      wrap.style.display='block'; videoAtivo=true;
+    }
+  }
+
   async function verificarControle() {
     if (CSV_BASE === 'SEU_CSV_URL_AQUI') return;
     const rows = await fetchCSV(GID_CONTROLE);
     if (!rows.length) return;
     const acao  = (rows[0][0]||'').trim().toLowerCase();
     const valor = (rows[0][1]||'').trim();
-    const chave = acao + valor;
-    if (chave === ultimoControle) return; // já executou
+    const chave = acao + '|' + rows.map(r=>r[1]).join('|');
+    if (chave === ultimoControle) return;
     ultimoControle = chave;
 
-    if (acao === 'radio_on')  { tocarRadio(); }
-    else if (acao === 'radio_off' || acao === 'parar') { pararTudo(); }
+    if (acao === 'radio_on') {
+      modoPlaylist = false; playlist = [];
+      tocarRadio();
+    }
+    else if (acao === 'radio_off' || acao === 'parar') {
+      modoPlaylist = false; playlist = [];
+      pararTudo();
+    }
     else if (acao === 'video' && valor) {
+      modoPlaylist = false; playlist = [];
       document.getElementById('midia-url-input').value = valor;
       _tocarUrlInterna(valor);
+    }
+    else if (acao === 'playlist') {
+      // Todas as URLs da coluna B viram a playlist
+      playlist = rows.map(r=>(r[1]||'').trim()).filter(Boolean);
+      if (!playlist.length) return;
+      modoPlaylist = true;
+      playlistIndex = 0;
+      setStatus(`▶ Playlist 1/${playlist.length}`, true);
+      _tocarPlaylistItem(playlist[0]);
     }
   }
 
