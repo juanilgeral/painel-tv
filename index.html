@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--azul:#0d2348;--azul2:#1a3a6b;--azul3:#2457a4;--acc:#f0a500;--text:#ffffff;--muted:#a0b4cc;}
-    html,body{width:100%;height:100%;overflow:hidden;margin:0;padding:0;background:#000;}
+    html,body{width:100vw;height:100vh;overflow:hidden;margin:0;padding:0;background:#0d1a2e;}
 
     #scale-wrap{
       width:1920px;height:1080px;
@@ -16,6 +16,7 @@
       position:absolute;top:0;left:0;
       background:var(--azul2);
       display:flex;flex-direction:column;
+      overflow:hidden;
     }
 
     /* HEADER */
@@ -193,14 +194,15 @@
   let playlist=[],playlistIndex=0,modoPlaylist=false,fullyKiosk=null;
   let avisos=[],avisoIdx=0,avisoTimer=null;
 
-  // AUTO-ESCALA — preenche a tela toda
+  // AUTO-ESCALA — tudo visível, fundo preto nas bordas
   function ajustarEscala(){
     const w=document.getElementById('scale-wrap');
     const sx=window.innerWidth/1920, sy=window.innerHeight/1080;
-    const s=Math.max(sx,sy);
+    const s=Math.min(sx,sy);
     const ox=(window.innerWidth-1920*s)/2;
     const oy=(window.innerHeight-1080*s)/2;
     w.style.transform='translate('+ox+'px,'+oy+'px) scale('+s+')';
+    document.body.style.background='#0d1a2e';
   }
   ajustarEscala();
   window.addEventListener('resize',ajustarEscala);
@@ -228,7 +230,10 @@
   function mostrarAviso(a){
     if(!a) return;
     if(a.midia){ tocarVideoArquivo(a.midia,false); agendarProx(TEMPO_AVISO*3); return; }
-    document.getElementById('aviso-icone').textContent=a.icone;
+    const el=document.getElementById('aviso-icone');
+    el.textContent=a.icone;
+    el.style.fontFamily="'Barlow Condensed',sans-serif";
+    el.style.fontSize=a.icone.length>2?'48px':'80px';
     document.getElementById('aviso-tag').textContent=a.tag;
     document.getElementById('aviso-titulo').textContent=a.titulo;
     document.getElementById('aviso-texto').textContent=a.texto;
@@ -338,7 +343,7 @@
     const lista=[];
     rows.filter(r=>r[0]&&!r[0].startsWith('⚙')).forEach(r=>{
       const tipo=(r[2]||'normal').toLowerCase();
-      const icones={urgente:'🔴',info:'🔵',ok:'✅',normal:'📢'};
+      const icones={urgente:'⚠',info:'ℹ',ok:'★',normal:'►'};
       const tags={urgente:'Urgente',info:'Informativo',ok:'Novidade',normal:'Aviso'};
       lista.push({titulo:r[0],texto:r[1]||'',icone:icones[tipo]||'📢',tag:tags[tipo]||'Aviso'});
     });
