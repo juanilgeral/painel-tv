@@ -20,7 +20,7 @@
     #relogio{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:var(--acc);line-height:1;text-align:right;}
     #data-label{font-size:14px;color:var(--muted);margin-top:2px;text-align:right;text-transform:capitalize}
     .body{display:grid;grid-template-columns:1fr 400px;overflow:hidden;}
-    .painel-esq{display:grid;grid-template-rows:1fr auto;overflow:hidden;border-right:1px solid rgba(255,255,255,.08);}
+    .painel-esq{display:grid;grid-template-rows:1fr auto;overflow:hidden;border-right:1px solid rgba(255,255,255,.08);position:relative;}
     .painel-avisos{padding:24px 30px;display:flex;flex-direction:column;gap:14px;overflow:hidden;position:relative;}
     .painel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--acc);padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1);}
     .avisos-lista{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;}
@@ -44,7 +44,7 @@
     .midia-status{font-size:12px;color:var(--muted);white-space:nowrap;}
     .midia-status.tocando{color:#34d399;}
     #player-audio{display:none;}
-    #player-video-wrap{display:none;position:absolute;inset:0;z-index:10;background:#000;border-radius:0;}
+    #player-video-wrap{display:none;position:absolute;inset:0;z-index:50;background:#000;}
     #player-video-wrap iframe,#player-video-wrap video{width:100%;height:100%;border:none;object-fit:contain;}
     .btn-fechar-video{position:absolute;top:10px;right:14px;background:rgba(0,0,0,.8);border:none;color:white;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:101;}
     .painel-lateral{display:flex;flex-direction:column;background:#0f2040;}
@@ -111,12 +111,7 @@
           <input id="midia-url-input" type="text" placeholder="Cole URL do YouTube ou arquivo de vídeo/áudio...">
           <button class="btn-tocar" onclick="tocarURL()">▶ Tocar</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
-          <span style="font-size:12px;color:var(--muted)">🔊</span>
-          <input type="range" id="volume-ctrl" min="0" max="1" step="0.05" value="1"
-            style="width:80px;accent-color:var(--acc);cursor:pointer;"
-            oninput="ajustarVolume(this.value)">
-        </div>
+
         <div class="midia-status" id="midia-status">Parado</div>
       </div>
     </div>
@@ -210,13 +205,6 @@
   }
 
   // ── Parar ────────────────────────────────────────
-  function ajustarVolume(val) {
-    const audio = document.getElementById('player-audio');
-    audio.volume = parseFloat(val);
-    const iframe = document.querySelector('#player-video-inner iframe');
-    // YouTube não permite controle de volume externo, apenas o próprio player
-  }
-
   function pararAudio() {
     const audio = document.getElementById('player-audio');
     audio.pause(); audio.src = '';
@@ -391,7 +379,7 @@
     if (!rows.length) return;
     const acao  = (rows[0][0]||'').trim().toLowerCase();
     const valor = (rows[0][1]||'').trim();
-    const chave = acao + '|' + rows.map(r=>r[1]).join('|');
+    const chave = acao + '|' + valor + '|' + rows.length;
     if (chave === ultimoControle) return;
     ultimoControle = chave;
 
