@@ -317,7 +317,7 @@
   // ── CSV ───────────────────────────────────────────
   async function fetchCSV(gid) {
     try {
-      const url = CSV_BASE + '&gid=' + gid + '&cachebust=' + Date.now();
+      const url = CSV_BASE + '&gid=' + gid + '&single=true';
       let text = null;
       // Tenta direto
       try {
