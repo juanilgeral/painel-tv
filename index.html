@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--azul:#0d2348;--azul2:#1a3a6b;--azul3:#2457a4;--acc:#f0a500;--text:#ffffff;--muted:#a0b4cc;}
-    html,body{width:100vw;height:100vh;overflow:hidden;margin:0;padding:0;background:var(--azul2);}
+    html,body{width:100vw;height:100vh;overflow:hidden;margin:0;padding:0;background:var(--azul2);color:#ffffff;}
 
     #scale-wrap{
       width:1920px;height:1080px;
@@ -17,6 +17,8 @@
       background:var(--azul2);
       display:flex;flex-direction:column;
       overflow:hidden;
+      /* Visível por padrão, escala ajustada pelo JS */
+      transform:scale(1);
     }
 
     /* HEADER */
@@ -55,7 +57,7 @@
       content:'';position:absolute;top:0;left:48px;right:48px;height:2px;
       background:linear-gradient(90deg,transparent,var(--acc),transparent);
     }
-    #aviso-icone{font-size:80px;margin-bottom:16px;line-height:1;}
+    #aviso-icone{font-size:80px;margin-bottom:16px;line-height:1;color:#ffffff;}
     #aviso-tag{
       font-family:'Barlow Condensed',sans-serif;
       font-size:28px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
@@ -66,9 +68,9 @@
     #aviso-titulo{
       font-family:'Barlow Condensed',sans-serif;
       font-size:92px;font-weight:900;line-height:1.05;
-      color:var(--text);margin-bottom:22px;
+      color:#ffffff;margin-bottom:22px;
     }
-    #aviso-texto{font-size:40px;line-height:1.65;color:rgba(255,255,255,.82);font-weight:300;white-space:pre-line;}
+    #aviso-texto{font-size:40px;line-height:1.65;color:#dde8f5;font-weight:300;white-space:pre-line;}
     #progresso-aviso{height:4px;width:0%;background:var(--acc);box-shadow:0 0 10px var(--acc);transition:width linear;flex-shrink:0;}
 
     /* VIDEO */
@@ -77,7 +79,7 @@
     .btn-fechar-video{position:absolute;top:14px;right:16px;background:rgba(0,0,0,.8);border:none;color:white;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:101;}
 
     /* DIREITA */
-    #painel-dir{flex:1;display:flex;flex-direction:column;background:#0f2040;}
+    #painel-dir{flex:1;display:flex;flex-direction:column;background:#0f2040;color:#ffffff;}
 
     /* FRASE */
     #frase-box{
@@ -86,12 +88,12 @@
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     .frase-icone{font-size:40px;margin-bottom:14px;opacity:.7;}
-    #frase-texto{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:600;line-height:1.4;color:rgba(255,255,255,.9);font-style:italic;}
+    #frase-texto{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:600;line-height:1.4;color:#f0ead8;font-style:italic;}
     #frase-autor{margin-top:12px;font-size:18px;color:var(--muted);}
 
     /* ANIVERSARIANTES */
     #aniv-box{padding:24px 32px;border-bottom:1px solid rgba(255,255,255,.08);min-height:180px;}
-    .lateral-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+    .lateral-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#a0b4cc;margin-bottom:14px;}
     .aniv-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:22px;}
     .aniv-item:last-child{border:none}
     .aniv-dia{background:var(--acc);color:var(--azul);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;padding:3px 10px;border-radius:4px;min-width:50px;text-align:center;}
@@ -206,13 +208,19 @@
   }
   ajustarEscala();
   window.addEventListener('resize',ajustarEscala);
+  // Recalcular após fontes carregarem
+  document.fonts.ready.then(ajustarEscala);
 
   function initFully(){
+    // Mostrar resolução para debug
+    document.getElementById('fk-status').textContent=window.innerWidth+'x'+window.innerHeight;
+    ajustarEscala();
     if(typeof fully!=='undefined'){
       fullyKiosk=fully;
-      document.getElementById('fk-status').textContent='Fully OK';
+      document.getElementById('fk-status').textContent='FK '+window.innerWidth+'x'+window.innerHeight;
       document.getElementById('fk-status').style.color='#34d399';
       fullyKiosk.setFullScreen(true);fullyKiosk.turnScreenOn();
+      ajustarEscala();
     }
   }
 
