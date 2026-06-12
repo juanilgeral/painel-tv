@@ -8,36 +8,35 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--azul:#1a3a6b;--azul2:#2457a4;--acc:#f0a500;--text:#ffffff;--muted:#a0b4cc;--danger:#e85555;}
-    html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul);color:var(--text);font-family:"Barlow",sans-serif;}
+    html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul);color:var(--text);font-family:'Barlow',sans-serif;}
     .wrapper{display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
     .header{display:flex;align-items:center;justify-content:space-between;padding:14px 36px;background:#0d2348;border-bottom:3px solid var(--acc);position:relative;}
     .logo-wrap{display:flex;align-items:center;gap:18px;flex-shrink:0;}
     .logo-wrap img{height:50px;object-fit:contain}
-    .logo-divider{display:none}
     .header-title{position:absolute;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;}
-    .header-title h1{font-family:"Barlow Condensed",sans-serif;font-size:36px;font-weight:900;color:var(--acc);letter-spacing:3px;text-transform:uppercase;line-height:1.1;margin:0;}
+    .header-title h1{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--acc);letter-spacing:3px;text-transform:uppercase;line-height:1.1;margin:0;}
     .header-title small{display:block;font-size:15px;color:var(--muted);font-weight:400;letter-spacing:2px;margin-top:2px}
-    #relogio{font-family:"Barlow Condensed",sans-serif;font-size:48px;font-weight:900;color:var(--acc);line-height:1;text-align:right;}
+    #relogio{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:var(--acc);line-height:1;text-align:right;}
     #data-label{font-size:14px;color:var(--muted);margin-top:2px;text-align:right;text-transform:capitalize}
     .body{display:grid;grid-template-columns:1fr 400px;overflow:hidden;}
     .painel-esq{display:grid;grid-template-rows:1fr auto;overflow:hidden;border-right:1px solid rgba(255,255,255,.08);position:relative;}
     .painel-avisos{padding:24px 30px;display:flex;flex-direction:column;gap:14px;overflow:hidden;position:relative;}
-    .painel-title{font-family:"Barlow Condensed",sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--acc);padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1);}
+    .painel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--acc);padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1);}
     .avisos-lista{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;}
     .aviso-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-left:4px solid var(--acc);border-radius:10px;padding:14px 18px;animation:fadeIn .5s ease;}
     .aviso-card.urgente{border-left-color:#e85555;background:rgba(232,85,85,.08)}
     .aviso-card.info{border-left-color:#4da6ff;background:rgba(77,166,255,.08)}
     .aviso-card.ok{border-left-color:#34d399;background:rgba(52,211,153,.08)}
-    .aviso-titulo{font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:700;margin-bottom:5px;}
+    .aviso-titulo{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;margin-bottom:5px;}
     .aviso-texto{font-size:18px;color:rgba(255,255,255,.8);line-height:1.6}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     .painel-midia{background:#081828;border-top:2px solid var(--azul2);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-    .midia-title{font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--acc);white-space:nowrap;}
+    .midia-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--acc);white-space:nowrap;}
     .midia-btns{display:flex;gap:8px;}
-    .btn-midia{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--muted);font-size:12px;font-family:"Barlow Condensed",sans-serif;font-weight:700;cursor:pointer;transition:all .2s;}
+    .btn-midia{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--muted);font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;}
     .btn-midia:hover,.btn-midia.ativo{background:var(--acc);border-color:var(--acc);color:#0d2348;}
     .midia-url-wrap{display:flex;gap:6px;flex:1;min-width:200px;}
-    #midia-url-input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px 12px;color:var(--text);font-size:13px;font-family:"Barlow",sans-serif;outline:none;}
+    #midia-url-input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px 12px;color:var(--text);font-size:13px;font-family:'Barlow',sans-serif;outline:none;}
     #midia-url-input:focus{border-color:var(--acc)}
     #midia-url-input::placeholder{color:var(--muted)}
     .btn-tocar{padding:6px 16px;background:var(--acc);border:none;border-radius:6px;color:#0d2348;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;}
@@ -48,21 +47,21 @@
     #player-video-wrap video{width:100%;height:100%;border:none;object-fit:contain;}
     .btn-fechar-video{position:absolute;top:10px;right:14px;background:rgba(0,0,0,.8);border:none;color:white;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:101;}
     .painel-lateral{display:flex;flex-direction:column;background:#0f2040;}
-    .lateral-section-title{font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+    .lateral-section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
     .frase-wrap{flex:1;padding:24px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-bottom:1px solid rgba(255,255,255,.08);}
     .frase-icone{font-size:32px;margin-bottom:10px;opacity:.7}
-    #frase-texto{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:600;line-height:1.4;color:rgba(255,255,255,.9);font-style:italic;}
+    #frase-texto{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;line-height:1.4;color:rgba(255,255,255,.9);font-style:italic;}
     #frase-autor{margin-top:8px;font-size:12px;color:var(--muted);}
     .aniversarios-wrap{padding:18px 24px;}
     .aniv-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;}
     .aniv-item:last-child{border:none}
-    .aniv-dia{background:var(--acc);color:#0d2348;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:12px;padding:2px 8px;border-radius:4px;min-width:38px;text-align:center;}
+    .aniv-dia{background:var(--acc);color:#0d2348;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;padding:2px 8px;border-radius:4px;min-width:38px;text-align:center;}
     .loading{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;padding:16px;}
     .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:bounce .8s infinite;}
     .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
     @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
     .ticker-wrap{overflow:hidden;background:#0d2348;border-top:2px solid var(--azul2);height:62px;display:flex;align-items:center;}
-    .ticker-label{background:var(--acc);color:#0d2348;font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;padding:0 22px;height:100%;display:flex;align-items:center;white-space:nowrap;letter-spacing:1px;flex-shrink:0;}
+    .ticker-label{background:var(--acc);color:#0d2348;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;padding:0 22px;height:100%;display:flex;align-items:center;white-space:nowrap;letter-spacing:1px;flex-shrink:0;}
     .ticker-content{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;}
     .ticker-text{white-space:nowrap;font-size:22px;font-weight:500;color:rgba(255,255,255,.9);animation:ticker 30s linear infinite;padding-left:100%;}
     @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
@@ -74,9 +73,9 @@
 <div class="wrapper">
   <div class="header">
     <div class="logo-wrap">
-      <img src="data:image/jpeg;base64,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" alt="Juanil">
+      <img src="logo-juanil.png" alt="Juanil">
     </div>
-    <div class="header-title"><h1>Painel de Comunicação</h1><small>Informações & Avisos Internos</small></div>
+    <div class="header-title"><h1>Painel de Comunicação</h1><small>Informações &amp; Avisos Internos</small></div>
     <div>
       <div id="relogio">00:00</div>
       <div id="data-label">—</div>
@@ -85,7 +84,7 @@
   <div class="body">
     <div class="painel-esq">
       <div class="painel-avisos">
-        <div class="painel-title">📢 Avisos & Comunicados</div>
+        <div class="painel-title">📢 Avisos &amp; Comunicados</div>
         <div class="avisos-lista" id="avisos-lista">
           <div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Carregando avisos...</span></div>
         </div>
@@ -137,18 +136,13 @@
   const SYNC_INTERVAL    = 5 * 60 * 1000;
   const JBFM_STREAM      = 'https://27613.live.streamtheworld.com/JBFMAAC.aac';
 
-  let radioAtiva  = false;
-  let videoAtivo  = false;
-  let ultimoControle = '';
-  let playlist       = [];
-  let playlistIndex  = 0;
-  let modoPlaylist   = false;
-  let fullyKiosk     = null;
+  let radioAtiva=false, videoAtivo=false, ultimoControle='';
+  let playlist=[], playlistIndex=0, modoPlaylist=false, fullyKiosk=null;
 
   function initFully() {
     if (typeof fully !== 'undefined') {
       fullyKiosk = fully;
-      document.getElementById('fk-status').textContent = '✅ Fully Kiosk';
+      document.getElementById('fk-status').textContent = 'Fully OK';
       document.getElementById('fk-status').style.color = '#34d399';
       fullyKiosk.setFullScreen(true);
       fullyKiosk.turnScreenOn();
@@ -159,8 +153,8 @@
     const d = new Date();
     document.getElementById('relogio').textContent =
       String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    const dias  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const dias  = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
+    const meses = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     document.getElementById('data-label').textContent =
       dias[d.getDay()] + ', ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
   }
@@ -173,92 +167,61 @@
     document.getElementById('btn-parar').style.display = tocando ? 'inline-block' : 'none';
   }
 
-  function pararAudio() {
-    const audio = document.getElementById('player-audio');
-    audio.pause(); audio.src = '';
-    radioAtiva = false;
-  }
-
-  function pararTudo() {
-    pararAudio(); fecharVideoSemRetomar(); setStatus('Parado');
-  }
+  function pararAudio() { const a=document.getElementById('player-audio'); a.pause(); a.src=''; radioAtiva=false; }
+  function pararTudo()  { pararAudio(); fecharVideoSemRetomar(); setStatus('Parado'); }
 
   function tocarRadio() {
     pararTudo();
-    const audio = document.getElementById('player-audio');
-    audio.src = JBFM_STREAM;
-    audio.play()
-      .then(() => { radioAtiva = true; setStatus('📻 JB FM ao vivo', true); })
-      .catch(() => { setStatus('❌ Erro ao tocar rádio'); });
+    const a = document.getElementById('player-audio');
+    a.src = JBFM_STREAM;
+    a.play().then(()=>{ radioAtiva=true; setStatus('JB FM ao vivo', true); })
+            .catch(()=>{ setStatus('Erro ao tocar radio'); });
   }
 
-  // ── Detecção e roteamento de mídia ──────────────────────────────
   function converterDriveUrl(url) {
     const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-    if (m) return 'https://drive.google.com/uc?export=download&id=' + m[1];
-    return url;
+    return m ? 'https://drive.google.com/uc?export=download&id=' + m[1] : url;
   }
 
-  function isYoutube(url) {
-    return url.includes('youtube.com') || url.includes('youtu.be');
-  }
+  function isYoutube(url) { return url.includes('youtube.com') || url.includes('youtu.be'); }
 
   function abrirYoutubeExterno(url) {
-    if (fullyKiosk) { fullyKiosk.openBrowser(url); }
-    else { window.open(url, '_blank'); }
+    if (fullyKiosk) fullyKiosk.openBrowser(url);
+    else window.open(url, '_blank');
   }
 
   function tocarURL() {
     const url = document.getElementById('midia-url-input').value.trim();
-    if (!url) return;
-    _tocarUrlInterna(url);
+    if (url) _tocarUrlInterna(url);
   }
 
   function _tocarUrlInterna(url) {
-    const deveRetomar = radioAtiva;
+    const ret = radioAtiva;
     if (radioAtiva) pararAudio();
-
-    // YouTube — abre no app externo (Fully Kiosk ou nova aba)
-    if (isYoutube(url)) {
-      abrirYoutubeExterno(url);
-      setStatus('▶ YouTube aberto externamente', true);
-      return;
-    }
-
-    // Google Drive — converte para link direto
+    if (isYoutube(url)) { abrirYoutubeExterno(url); setStatus('YouTube aberto externamente', true); return; }
     url = converterDriveUrl(url);
-
-    if (/\.(mp3|aac|ogg|wav|m4a)$/i.test(url)) {
-      tocarAudioUrl(url, deveRetomar);
-    } else {
-      // MP4, WebM, ou link Drive convertido — toca no painel com áudio
-      tocarVideoArquivo(url, deveRetomar);
-    }
+    if (/\.(mp3|aac|ogg|wav|m4a)$/i.test(url)) tocarAudioUrl(url, ret);
+    else tocarVideoArquivo(url, ret);
   }
 
-  function tocarAudioUrl(url, retornarRadio=false) {
-    const audio = document.getElementById('player-audio');
-    audio.src = url;
-    audio.play()
-      .then(() => { setStatus('🎵 Áudio tocando', true); })
-      .catch(() => setStatus('❌ Erro ao carregar áudio'));
+  function tocarAudioUrl(url) {
+    const a = document.getElementById('player-audio');
+    a.src = url;
+    a.play().then(()=>setStatus('Audio tocando', true)).catch(()=>setStatus('Erro no audio'));
   }
 
-  function tocarVideoArquivo(url, retornarRadio=false) {
-    const wrap = document.getElementById('player-video-wrap');
+  function tocarVideoArquivo(url, ret=false) {
     document.getElementById('player-video-inner').innerHTML =
-      '<video src="' + url + '" autoplay controls style="width:100%;height:100%;object-fit:contain;background:#000" data-retomar="' + retornarRadio + '" onended="aoTerminarVideo()"></video>';
-    wrap.style.display = 'block';
-    videoAtivo = true;
-    setStatus('▶ Vídeo tocando', true);
+      '<video src="' + url + '" autoplay controls style="width:100%;height:100%;object-fit:contain;background:#000" data-retomar="' + ret + '" onended="aoTerminarVideo()"></video>';
+    document.getElementById('player-video-wrap').style.display = 'block';
+    videoAtivo = true; setStatus('Video tocando', true);
   }
 
   function fecharVideo() {
-    const inner = document.getElementById('player-video-inner');
-    const el = inner.querySelector('[data-retomar]');
-    const deveRetomar = el && el.dataset.retomar === 'true';
+    const el = document.getElementById('player-video-inner').querySelector('[data-retomar]');
+    const ret = el && el.dataset.retomar === 'true';
     fecharVideoSemRetomar();
-    if (deveRetomar) setTimeout(() => tocarRadio(), 500);
+    if (ret) setTimeout(()=>tocarRadio(), 500);
   }
 
   function fecharVideoSemRetomar() {
@@ -268,49 +231,36 @@
     if (!radioAtiva) setStatus('Parado');
   }
 
-  function aoTerminarVideo() {
-    if (modoPlaylist) { proximoVideo(); }
-    else { fecharVideo(); }
-  }
+  function aoTerminarVideo() { if (modoPlaylist) proximoVideo(); else fecharVideo(); }
 
-  // ── Playlist ───────────────────────────────────────
   function proximoVideo() {
     if (!modoPlaylist || !playlist.length) return;
     playlistIndex = (playlistIndex + 1) % playlist.length;
-    const url = playlist[playlistIndex];
-    setStatus('▶ Playlist ' + (playlistIndex+1) + '/' + playlist.length, true);
-    _tocarPlaylistItem(url);
+    setStatus('Playlist ' + (playlistIndex+1) + '/' + playlist.length, true);
+    _tocarPlaylistItem(playlist[playlistIndex]);
   }
 
   function _tocarPlaylistItem(url) {
-    const deveRetomar = radioAtiva;
+    const ret = radioAtiva;
     if (radioAtiva) pararAudio();
-    if (isYoutube(url)) {
-      abrirYoutubeExterno(url);
-      setTimeout(proximoVideo, 5000);
-      return;
-    }
+    if (isYoutube(url)) { abrirYoutubeExterno(url); setTimeout(proximoVideo, 5000); return; }
     url = converterDriveUrl(url);
-    const wrap = document.getElementById('player-video-wrap');
     document.getElementById('player-video-inner').innerHTML =
-      '<video src="' + url + '" autoplay style="width:100%;height:100%;object-fit:contain;background:#000" data-retomar="' + deveRetomar + '" onended="proximoVideo()"></video>';
-    wrap.style.display = 'block';
+      '<video src="' + url + '" autoplay style="width:100%;height:100%;object-fit:contain;background:#000" data-retomar="' + ret + '" onended="proximoVideo()"></video>';
+    document.getElementById('player-video-wrap').style.display = 'block';
     videoAtivo = true;
   }
 
-  // ── CSV ────────────────────────────────────────────
   async function fetchCSV(gid) {
     try {
       const url = CSV_BASE + '&gid=' + gid + '&single=true';
       let text = null;
-      try { const r = await fetch(url, {redirect:'follow'}); if (r.ok) text = await r.text(); } catch(e) {}
+      try { const r=await fetch(url,{redirect:'follow'}); if(r.ok) text=await r.text(); } catch(e){}
       if (!text) {
-        try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if (r.ok) text = await r.text(); } catch(e) {}
+        try { const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url)); if(r.ok) text=await r.text(); } catch(e){}
       }
       if (!text) return [];
-      const lines = text.split(/
-?
-/).filter(l => l.trim());
+      const lines = text.split(/\r?\n/).filter(l=>l.trim());
       if (lines.length < 2) return [];
       return lines.slice(3).map(line => {
         const cols=[]; let cur='', inQ=false;
@@ -325,66 +275,62 @@
     } catch(e) { return []; }
   }
 
-  // ── Controle remoto ────────────────────────────────
   async function verificarControle() {
     const rows = await fetchCSV(GID_CONTROLE);
     if (!rows.length) return;
-    const acao  = (rows[0][0]||'').trim().toLowerCase();
-    const valor = (rows[0][1]||'').trim();
-    const chave = acao + '|' + valor + '|' + rows.length;
-    if (chave === ultimoControle) return;
-    ultimoControle = chave;
-    if (acao === 'radio_on') { modoPlaylist=false; playlist=[]; tocarRadio(); }
-    else if (acao === 'radio_off' || acao === 'parar') { modoPlaylist=false; playlist=[]; pararTudo(); }
-    else if (acao === 'video' && valor) { modoPlaylist=false; playlist=[]; document.getElementById('midia-url-input').value=valor; _tocarUrlInterna(valor); }
-    else if (acao === 'playlist') {
-      playlist = rows.map(r=>(r[1]||'').trim()).filter(Boolean);
+    const acao=(rows[0][0]||'').trim().toLowerCase(), valor=(rows[0][1]||'').trim();
+    const chave=acao+'|'+valor+'|'+rows.length;
+    if (chave===ultimoControle) return;
+    ultimoControle=chave;
+    if (acao==='radio_on') { modoPlaylist=false; playlist=[]; tocarRadio(); }
+    else if (acao==='radio_off'||acao==='parar') { modoPlaylist=false; playlist=[]; pararTudo(); }
+    else if (acao==='video'&&valor) { modoPlaylist=false; playlist=[]; document.getElementById('midia-url-input').value=valor; _tocarUrlInterna(valor); }
+    else if (acao==='playlist') {
+      playlist=rows.map(r=>(r[1]||'').trim()).filter(Boolean);
       if (!playlist.length) return;
       modoPlaylist=true; playlistIndex=0;
-      setStatus('▶ Playlist 1/' + playlist.length, true);
+      setStatus('Playlist 1/'+playlist.length, true);
       _tocarPlaylistItem(playlist[0]);
     }
   }
 
-  // ── Avisos ─────────────────────────────────────────
   async function carregarAvisos() {
-    const rows = await fetchCSV(GID_AVISOS);
-    const lista = document.getElementById('avisos-lista');
+    const rows=await fetchCSV(GID_AVISOS);
+    const lista=document.getElementById('avisos-lista');
     if (!rows.length) { lista.innerHTML='<div style="color:var(--muted);font-size:14px;padding:16px">Nenhum aviso no momento.</div>'; return; }
-    lista.innerHTML = rows.map(r => {
+    lista.innerHTML=rows.map(r=>{
       const tipo=(r[2]||'normal').toLowerCase();
-      return '<div class="aviso-card ' + tipo + '"><div class="aviso-titulo">' + (r[0]||'') + '</div><div class="aviso-texto">' + (r[1]||'') + '</div></div>';
+      return '<div class="aviso-card '+tipo+'"><div class="aviso-titulo">'+(r[0]||'')+'</div><div class="aviso-texto">'+(r[1]||'')+'</div></div>';
     }).join('');
   }
 
   async function carregarTicker() {
-    const rows = await fetchCSV(GID_TICKER);
-    const el = document.getElementById('ticker-text');
-    const anoAtual = new Date().getFullYear();
-    const textos = rows.map(r=>r[0]).filter(Boolean).map(t =>
-      t.replace(/desde (\d{4}) há \d+ anos/g, (_, ano) => 'desde ' + ano + ' há ' + (anoAtual - parseInt(ano)) + ' anos')
+    const rows=await fetchCSV(GID_TICKER);
+    const el=document.getElementById('ticker-text');
+    const ano=new Date().getFullYear();
+    const textos=rows.map(r=>r[0]).filter(Boolean).map(t=>
+      t.replace(/desde (\d+) h.+ (\d+) anos/g, (_,y)=>'desde '+y+' ha '+(ano-parseInt(y))+' anos')
     );
     if (!textos.length) return;
-    el.textContent = textos.join('   •   ');
+    el.textContent=textos.join('   -   ');
     el.style.animation='none'; el.offsetHeight;
-    el.style.animation = 'ticker ' + Math.max(20,textos.join('').length*0.12) + 's linear infinite';
+    el.style.animation='ticker '+Math.max(20,textos.join('').length*0.12)+'s linear infinite';
   }
 
   async function carregarFrase() {
-    const rows = await fetchCSV(GID_FRASES);
+    const rows=await fetchCSV(GID_FRASES);
     if (!rows.length) return;
-    const f = rows[Math.floor(Date.now()/(1000*60*60*24))%rows.length]||rows[0];
-    document.getElementById('frase-texto').textContent = '"' + (f[0]||'') + '"';
-    document.getElementById('frase-autor').textContent = f[1] ? '— ' + f[1] : '';
+    const f=rows[Math.floor(Date.now()/(1000*60*60*24))%rows.length]||rows[0];
+    document.getElementById('frase-texto').textContent='"'+(f[0]||'')+'"';
+    document.getElementById('frase-autor').textContent=f[1]?'-- '+f[1]:'';
   }
 
   async function carregarAniversarios() {
-    const rows = await fetchCSV(GID_ANIVERSARIOS);
+    const rows=await fetchCSV(GID_ANIVERSARIOS);
     const hoje=new Date();
-    const dH=String(hoje.getDate()).padStart(2,'0');
-    const mH=String(hoje.getMonth()+1).padStart(2,'0');
+    const dH=String(hoje.getDate()).padStart(2,'0'), mH=String(hoje.getMonth()+1).padStart(2,'0');
     const lista=rows.map(r=>{
-      const [dd,mm]=(r[1]||'').split('/');
+      const p=(r[1]||'').split('/'); const dd=p[0],mm=p[1];
       if(!dd||!mm) return null;
       const ano=hoje.getFullYear();
       let aniv=new Date(ano,parseInt(mm)-1,parseInt(dd));
@@ -393,41 +339,36 @@
       return {nome:r[0],dd,mm,diff:Math.round((aniv-h)/(1000*60*60*24))};
     }).filter(Boolean).filter(a=>a.diff<=7).sort((a,b)=>a.diff-b.diff);
     const el=document.getElementById('aniversarios-lista');
-    if(!lista.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">Nenhum aniversariante nos próximos 7 dias</div>';return;}
+    if(!lista.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">Nenhum aniversariante nos proximos 7 dias</div>';return;}
     el.innerHTML=lista.map(a=>{
       const cor=a.diff===0?'#e85555':'var(--acc)';
-      return '<div class="aniv-item"><span class="aniv-dia" style="background:' + cor + '">' + (a.diff===0?'HOJE':a.dd+'/'+a.mm) + '</span><span>' + a.nome + '</span>' + (a.diff===0?'<span style="font-size:16px">🎂</span>':'') + '</div>';
+      return '<div class="aniv-item"><span class="aniv-dia" style="background:'+cor+'">'+(a.diff===0?'HOJE':a.dd+'/'+a.mm)+'</span><span>'+a.nome+'</span>'+(a.diff===0?'<span style="font-size:16px">🎂</span>':'')+'</div>';
     }).join('');
   }
 
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
   async function sincronizar() {
-    await carregarAvisos();   await sleep(1500);
-    await carregarTicker();   await sleep(1500);
-    await carregarFrase();    await sleep(1500);
+    await carregarAvisos(); await sleep(1500);
+    await carregarTicker(); await sleep(1500);
+    await carregarFrase();  await sleep(1500);
     await carregarAniversarios();
   }
 
-  async function cicloCompleto() {
-    await sincronizar();
-    await verificarControle();
-  }
+  async function cicloCompleto() { await sincronizar(); await verificarControle(); }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initFully();
-      cicloCompleto();
+  if (document.readyState==='loading') {
+    document.addEventListener('DOMContentLoaded', ()=>{
+      initFully(); cicloCompleto();
       setInterval(cicloCompleto, SYNC_INTERVAL);
-      setInterval(verificarControle, 30 * 1000);
-      setTimeout(() => tocarRadio(), 2000);
+      setInterval(verificarControle, 30*1000);
+      setTimeout(()=>tocarRadio(), 2000);
     });
   } else {
-    initFully();
-    cicloCompleto();
+    initFully(); cicloCompleto();
     setInterval(cicloCompleto, SYNC_INTERVAL);
-    setInterval(verificarControle, 30 * 1000);
-    setTimeout(() => tocarRadio(), 2000);
+    setInterval(verificarControle, 30*1000);
+    setTimeout(()=>tocarRadio(), 2000);
   }
 </script>
 </body>
