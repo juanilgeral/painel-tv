@@ -301,14 +301,14 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
 
   async function verificarControle(){
     const rows=await fetchCSV(GID_CONTROLE);
-    if(!rows.length){
-      document.getElementById('frase-texto').textContent='"O sucesso e a soma de pequenos esforcos repetidos dia apos dia."';
-      document.getElementById('frase-autor').textContent='— Robert Collier';
-      return;
-    }
-    const acao=(rows[0][0]||'').trim().toLowerCase(),valor=(rows[0][1]||'').trim();
-    const chave=acao+'|'+valor+'|'+rows.length;
-    if(chave===ultimoControle)return;
+    if(!rows.length) return;
+    // Pega primeira linha com conteúdo na coluna A
+    const linha=rows.find(r=>r[0]&&r[0].trim()&&!r[0].includes('ACAO')&&!r[0].includes('radio_on'));
+    if(!linha) return;
+    const acao=linha[0].trim().toLowerCase();
+    const valor=(linha[1]||'').trim();
+    const chave=acao+'|'+valor;
+    if(chave===ultimoControle) return;
     ultimoControle=chave;
     if(acao==='radio_on'){modoPlaylist=false;playlist=[];tocarRadio();}
     else if(acao==='radio_off'||acao==='parar'){modoPlaylist=false;playlist=[];pararTudo();}
