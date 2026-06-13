@@ -344,7 +344,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     const el=document.getElementById('ticker-text');
     el.textContent=[...textos,...textos].join('   •   ');
     el.style.animation='none';el.offsetHeight;
-    el.style.animation='ticker '+Math.max(30,textos.join('').length*0.1)+'s linear infinite';
+    el.style.animation='ticker '+Math.max(60,textos.join('').length*0.25)+'s linear infinite';
   }
 
   async function carregarFrase(){
