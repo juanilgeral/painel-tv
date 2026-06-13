@@ -246,7 +246,17 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
 
   function converterDriveUrl(url){const m=url.match(/drive\.google\.com\/file\/d\/([^/]+)/);return m?'https://drive.google.com/uc?export=download&id='+m[1]:url;}
   function isYoutube(url){return url.includes('youtube.com')||url.includes('youtu.be');}
-  function abrirYoutubeExterno(url){if(fullyKiosk)fullyKiosk.openBrowser(url);else window.open(url,'_blank');}
+  function abrirYoutubeExterno(url){
+    // Tenta abrir via Fully Kiosk API
+    if(fullyKiosk){
+      try{ fullyKiosk.openBrowser(url); return; }catch(e){}
+      try{ fullyKiosk.startApplication('com.google.android.youtube',url); return; }catch(e){}
+    }
+    // Fallback: location redirect
+    try{ window.location.href=url; }catch(e){}
+    // Último recurso: nova aba
+    window.open(url,'_blank');
+  }
   function tocarURL(){const url=document.getElementById('midia-url-input').value.trim();if(url)_tocarUrlInterna(url);}
 
   function _tocarUrlInterna(url){
@@ -302,11 +312,14 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   async function verificarControle(){
     const rows=await fetchCSV(GID_CONTROLE);
     if(!rows.length) return;
-    // Pega primeira linha com conteúdo na coluna A
-    const linha=rows.find(r=>r[0]&&r[0].trim()&&!r[0].includes('ACAO')&&!r[0].includes('radio_on'));
-    if(!linha) return;
+    // Linha 4 da planilha = rows[0] após slice(3)
+    // Só executa se col A tiver conteúdo E col B não for '(deixe em branco)'
+    const linha=rows[0];
+    if(!linha||!linha[0]) return;
     const acao=linha[0].trim().toLowerCase();
     const valor=(linha[1]||'').trim();
+    // Ignora linhas de referência (col B contém 'deixe em branco' ou 'youtube.com/watch?v=...')
+    if(valor.includes('deixe em branco')||valor.includes('watch?v=...')||valor.includes('seu-arquivo')) return;
     const chave=acao+'|'+valor;
     if(chave===ultimoControle) return;
     ultimoControle=chave;
