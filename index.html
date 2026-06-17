@@ -258,11 +258,21 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     // Pausa rádio antes de abrir
     if(radioAtiva) pararAudio();
 
-    // Abre YouTube externamente via Fully Kiosk
+    // Tenta detectar fully novamente (pode ter carregado depois do init)
+    if(!fullyKiosk && typeof fully !== 'undefined') fullyKiosk = fully;
+
+    setStatus('Abrindo YouTube...',true);
+
+    // Tenta abrir de várias formas
+    let abriu = false;
     if(fullyKiosk){
-      try{ fullyKiosk.openBrowser(url); }catch(e){ window.open(url,'_blank'); }
-    } else {
-      window.open(url,'_blank');
+      try{ fullyKiosk.openBrowser(url); abriu=true; }catch(e){}
+    }
+    if(!abriu){
+      // Fallback: redireciona a página atual para o YouTube
+      // e usa o botão voltar para retornar
+      window.location.href = url;
+      abriu = true;
     }
 
     setStatus('YouTube aberto — voltando em 5min',true);
@@ -272,11 +282,11 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     window._ytTimer=setTimeout(()=>{
       if(fullyKiosk){
         try{ fullyKiosk.loadStartURL(); }catch(e){}
-        try{ fullyKiosk.exitKioskMode(); fullyKiosk.enterKioskMode(); }catch(e){}
+      } else {
+        window.location.href = 'https://juanilgeral.github.io/painel-tv/';
       }
       setStatus('Parado');
       videoAtivo=false;
-      // Retoma rádio
       setTimeout(()=>tocarRadio(), 1000);
     }, 5*60*1000);
   }
