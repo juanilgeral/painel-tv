@@ -139,6 +139,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   const CSV_BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vTS48qfkYUBFfLe5kwWlR1q9YIJudju8kO0THG6H-rnjO6RB2XGTvnQt6aymKfGbdZdBrAqPKRWKGIH/pub?output=csv';
   const GID_AVISOS='1151834973',GID_TICKER='1371337128',GID_FRASES='867030255';
   const GID_ANIVERSARIOS='61536774',GID_CONTROLE='785112419';
+  const GID_PROGRAMACAO=''; // Cole aqui o GID da aba PROGRAMACAO após criar na planilha
   const SYNC_INTERVAL=5*60*1000,TEMPO_AVISO=10000;
   const JBFM_STREAM='https://27613.live.streamtheworld.com/JBFMAAC.aac';
   const CLIMA_LAT=-22.7592,CLIMA_LON=-43.4511;
@@ -249,8 +250,18 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     const ret=radioAtiva;if(radioAtiva)pararAudio();
     if(isYoutube(url)){abrirYoutubeExterno(url);return;}
     url=converterDriveUrl(url);
-    if(/\.(mp3|aac|ogg|wav|m4a)$/.test(url))tocarAudioUrl(url);
-    else tocarVideoArquivo(url,ret);
+    if(/\.(mp3|aac|ogg|wav|m4a)$/.test(url)){tocarAudioUrl(url);}
+    else if(/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(url)){exibirImagem(url,ret);}
+    else{tocarVideoArquivo(url,ret);}
+  }
+
+  function exibirImagem(url,ret=false){
+    const wrap=document.getElementById('player-video-wrap');
+    const inner=document.getElementById('player-video-inner');
+    inner.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:contain;background:#000" onclick="fecharVideo()">';
+    wrap.style.display='block';
+    videoAtivo=true;
+    setStatus('Imagem exibida',true);
   }
   function tocarAudioUrl(url){const a=document.getElementById('player-audio');a.src=url;a.play().then(()=>setStatus('Audio tocando',true)).catch(()=>setStatus('Erro no audio'));}
   function tocarVideoArquivo(url,ret=false){
@@ -290,6 +301,51 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
         cols.push(cur.trim());return cols;
       });
     }catch(e){return[];}
+  }
+
+  // ── PROGRAMAÇÃO HORÁRIA ──────────────────────────────
+  let ultimaProgramacao = '';
+
+  async function verificarProgramacao(){
+    if(!GID_PROGRAMACAO) return;
+    const rows = await fetchCSV(GID_PROGRAMACAO);
+    if(!rows.length) return;
+
+    const agora = new Date();
+    const hAgora = agora.getHours()*60 + agora.getMinutes();
+
+    for(const r of rows){
+      const inicio = r[0]||''; // HH:MM
+      const fim    = r[1]||''; // HH:MM
+      const cmd    = (r[2]||'').trim().toLowerCase();
+      const url    = (r[3]||'').trim();
+      const dias   = (r[4]||'todos').trim().toLowerCase(); // todos, seg-sex, fins
+
+      if(!inicio||!fim||!cmd) continue;
+
+      // Verificar dia da semana
+      const diaSemana = agora.getDay(); // 0=dom, 6=sab
+      if(dias==='seg-sex' && (diaSemana===0||diaSemana===6)) continue;
+      if(dias==='fins' && diaSemana>0 && diaSemana<6) continue;
+
+      // Converter horários
+      const [hi,mi] = inicio.split(':').map(Number);
+      const [hf,mf] = fim.split(':').map(Number);
+      const hInicio = hi*60+mi;
+      const hFim    = hf*60+mf;
+
+      if(hAgora >= hInicio && hAgora < hFim){
+        const chave = cmd+'|'+url+'|'+inicio;
+        if(chave === ultimaProgramacao) return;
+        ultimaProgramacao = chave;
+        if(cmd==='video'&&url)   _tocarUrlInterna(url);
+        else if(cmd==='radio')   tocarRadio();
+        else if(cmd==='parar')   pararTudo();
+        return;
+      }
+    }
+    // Fora de qualquer faixa — limpa para permitir nova execução
+    ultimaProgramacao='';
   }
 
   async function verificarControle(){
@@ -386,9 +442,19 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   fetchClima();setInterval(fetchClima,CLIMA_INT);
 
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>{initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,10*1000);setTimeout(()=>tocarRadio(),2000);});
+    document.addEventListener('DOMContentLoaded',()=>{
+      initFully();cicloCompleto();
+      setInterval(cicloCompleto,SYNC_INTERVAL);
+      setInterval(verificarControle,10*1000);
+      setInterval(verificarProgramacao,60*1000); // verifica programação a cada minuto
+      setTimeout(()=>tocarRadio(),2000);
+    });
   }else{
-    initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,10*1000);setTimeout(()=>tocarRadio(),2000);
+    initFully();cicloCompleto();
+    setInterval(cicloCompleto,SYNC_INTERVAL);
+    setInterval(verificarControle,10*1000);
+    setInterval(verificarProgramacao,60*1000);
+    setTimeout(()=>tocarRadio(),2000);
   }
 </script>
 </body>
