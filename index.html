@@ -236,7 +236,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
       if(typeof fully!=='undefined'){try{fully.loadStartURL();}catch(e){}}
       setStatus('Parado');videoAtivo=false;
       setTimeout(()=>tocarRadio(),1000);
-    },5*60*1000);
+    },1*60*1000);
   }
 
   function tocarURL(){const url=document.getElementById('midia-url-input').value.trim();if(url)_tocarUrlInterna(url);}
@@ -381,9 +381,9 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   fetchClima();setInterval(fetchClima,CLIMA_INT);
 
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>{initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,30*1000);setTimeout(()=>tocarRadio(),2000);});
+    document.addEventListener('DOMContentLoaded',()=>{initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,10*1000);setTimeout(()=>tocarRadio(),2000);});
   }else{
-    initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,30*1000);setTimeout(()=>tocarRadio(),2000);
+    initFully();cicloCompleto();setInterval(cicloCompleto,SYNC_INTERVAL);setInterval(verificarControle,10*1000);setTimeout(()=>tocarRadio(),2000);
   }
 </script>
 </body>
