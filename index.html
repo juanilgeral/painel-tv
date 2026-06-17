@@ -254,11 +254,40 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     return (m1&&m1[1])||(m2&&m2[1])||(m3&&m3[1])||(m4&&m4[1])||null;
   }
 
+  function extrairYoutubeId(url){
+    const m1=url.match(/[?&]v=([^&\s]+)/);
+    const m2=url.match(/youtu\.be\/([^?\s]+)/);
+    const m3=url.match(/\/live\/([^?\s]+)/);
+    return (m1&&m1[1])||(m2&&m2[1])||(m3&&m3[1])||null;
+  }
+
   function abrirYoutubeExterno(url){
     if(radioAtiva) pararAudio();
-    setStatus('Abrindo YouTube...',true);
-    // Redireciona direto para o YouTube — tela cheia no TV Box
-    window.location.href = url;
+    setStatus('YouTube aberto — voltando em 5min',true);
+
+    const id = extrairYoutubeId(url);
+
+    if(typeof fully !== 'undefined'){
+      // Tenta abrir via intent do Android (abre app YouTube com som e tela cheia)
+      const intentUrl = id
+        ? 'intent://www.youtube.com/watch?v='+id+'#Intent;package=com.google.android.youtube;scheme=https;end'
+        : url;
+      try{ fully.openBrowser(intentUrl); }catch(e){
+        try{ fully.openBrowser(url); }catch(e2){}
+      }
+    } else {
+      window.open(url,'_blank');
+    }
+    // Volta ao painel após 5 minutos
+    clearTimeout(window._ytTimer);
+    window._ytTimer=setTimeout(()=>{
+      if(typeof fully !== 'undefined'){
+        try{ fully.loadStartURL(); }catch(e){}
+      }
+      setStatus('Parado');
+      videoAtivo=false;
+      setTimeout(()=>tocarRadio(), 1000);
+    }, 5*60*1000);
   }
   function tocarURL(){const url=document.getElementById('midia-url-input').value.trim();if(url)_tocarUrlInterna(url);}
 
