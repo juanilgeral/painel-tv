@@ -229,13 +229,8 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   function abrirYoutubeExterno(url){
     if(radioAtiva)pararAudio();
     setStatus('YouTube aberto — voltando em 5min',true);
-    const id=extrairYoutubeId(url);
-    if(typeof fully!=='undefined'){
-      const intentUrl=id?'intent://www.youtube.com/watch?v='+id+'#Intent;package=com.google.android.youtube;scheme=https;end':url;
-      try{fully.openBrowser(intentUrl);}catch(e){try{fully.openBrowser(url);}catch(e2){}}
-    }else{
-      window.open(url,'_blank');
-    }
+    // Redireciona direto para o YouTube
+    window.location.href=url;
     clearTimeout(window._ytTimer);
     window._ytTimer=setTimeout(()=>{
       if(typeof fully!=='undefined'){try{fully.loadStartURL();}catch(e){}}
