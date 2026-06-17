@@ -255,27 +255,30 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   }
 
   function abrirYoutubeExterno(url){
-    const id=extrairYoutubeId(url);
-    const wrap=document.getElementById('player-video-wrap');
-    const inner=document.getElementById('player-video-inner');
+    // Pausa rádio antes de abrir
+    if(radioAtiva) pararAudio();
 
-    // Monta URL de embed sem-cookie com autoplay
-    const embedUrl=id
-      ? 'https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&controls=1&rel=0&modestbranding=1'
-      : url;
+    // Abre YouTube externamente via Fully Kiosk
+    if(fullyKiosk){
+      try{ fullyKiosk.openBrowser(url); }catch(e){ window.open(url,'_blank'); }
+    } else {
+      window.open(url,'_blank');
+    }
 
-    inner.innerHTML=
-      '<iframe id="yt-frame" src="'+embedUrl+'"'+
-      ' allow="autoplay; encrypted-media; fullscreen; picture-in-picture"'+
-      ' allowfullscreen sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"'+
-      ' style="width:100%;height:100%;border:none;background:#000"></iframe>';
+    setStatus('YouTube aberto — voltando em 5min',true);
 
-    wrap.style.display='block';
-    videoAtivo=true;
-    setStatus('YouTube tocando',true);
-
-    // Retorna ao painel após duração estimada (fallback: 5min)
-    // O botão X também fecha manualmente
+    // Volta ao painel após 5 minutos automaticamente
+    clearTimeout(window._ytTimer);
+    window._ytTimer=setTimeout(()=>{
+      if(fullyKiosk){
+        try{ fullyKiosk.loadStartURL(); }catch(e){}
+        try{ fullyKiosk.exitKioskMode(); fullyKiosk.enterKioskMode(); }catch(e){}
+      }
+      setStatus('Parado');
+      videoAtivo=false;
+      // Retoma rádio
+      setTimeout(()=>tocarRadio(), 1000);
+    }, 5*60*1000);
   }
   function tocarURL(){const url=document.getElementById('midia-url-input').value.trim();if(url)_tocarUrlInterna(url);}
 
@@ -344,7 +347,15 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     if(chave===ultimoControle) return;
     ultimoControle=chave;
     if(acao==='radio_on'){modoPlaylist=false;playlist=[];tocarRadio();}
-    else if(acao==='radio_off'||acao==='parar'){modoPlaylist=false;playlist=[];pararTudo();}
+    else if(acao==='radio_off'||acao==='parar'){
+      modoPlaylist=false;playlist=[];
+      clearTimeout(window._ytTimer);
+      // Força retorno ao painel se YouTube estiver aberto externamente
+      if(fullyKiosk){
+        try{ fullyKiosk.loadStartURL(); }catch(e){}
+      }
+      pararTudo();
+    }
     else if(acao==='video'&&valor){modoPlaylist=false;playlist=[];_tocarUrlInterna(valor);}
     else if(acao==='playlist'){
       playlist=rows.map(r=>(r[1]||'').trim()).filter(Boolean);
