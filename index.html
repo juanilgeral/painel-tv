@@ -359,7 +359,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     else if(acao==='radio_off'||acao==='parar'){
       modoPlaylist=false;playlist=[];
       clearTimeout(window._ytTimer);
-      // Força retorno ao painel se YouTube estiver aberto externamente
+      ultimoControle=''; // limpa para permitir reuso do mesmo comando
       if(typeof fully !== 'undefined'){
         try{ fully.loadStartURL(); }catch(e){}
       }
