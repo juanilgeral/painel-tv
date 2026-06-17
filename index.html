@@ -255,40 +255,10 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   }
 
   function abrirYoutubeExterno(url){
-    // Pausa rádio antes de abrir
     if(radioAtiva) pararAudio();
-
-    // Tenta detectar fully novamente (pode ter carregado depois do init)
-    if(!fullyKiosk && typeof fully !== 'undefined') fullyKiosk = fully;
-
     setStatus('Abrindo YouTube...',true);
-
-    // Tenta abrir de várias formas
-    let abriu = false;
-    if(fullyKiosk){
-      try{ fullyKiosk.openBrowser(url); abriu=true; }catch(e){}
-    }
-    if(!abriu){
-      // Fallback: redireciona a página atual para o YouTube
-      // e usa o botão voltar para retornar
-      window.location.href = url;
-      abriu = true;
-    }
-
-    setStatus('YouTube aberto — voltando em 5min',true);
-
-    // Volta ao painel após 5 minutos automaticamente
-    clearTimeout(window._ytTimer);
-    window._ytTimer=setTimeout(()=>{
-      if(fullyKiosk){
-        try{ fullyKiosk.loadStartURL(); }catch(e){}
-      } else {
-        window.location.href = 'https://juanilgeral.github.io/painel-tv/';
-      }
-      setStatus('Parado');
-      videoAtivo=false;
-      setTimeout(()=>tocarRadio(), 1000);
-    }, 5*60*1000);
+    // Redireciona direto para o YouTube — tela cheia no TV Box
+    window.location.href = url;
   }
   function tocarURL(){const url=document.getElementById('midia-url-input').value.trim();if(url)_tocarUrlInterna(url);}
 
