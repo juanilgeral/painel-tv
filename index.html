@@ -360,8 +360,8 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
       modoPlaylist=false;playlist=[];
       clearTimeout(window._ytTimer);
       // Força retorno ao painel se YouTube estiver aberto externamente
-      if(fullyKiosk){
-        try{ fullyKiosk.loadStartURL(); }catch(e){}
+      if(typeof fully !== 'undefined'){
+        try{ fully.loadStartURL(); }catch(e){}
       }
       pararTudo();
     }
