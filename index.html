@@ -116,6 +116,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
       <div id="midia-box">
         <div class="midia-title">🎵 Mídia</div>
         <button class="btn-midia" onclick="tocarRadio()">📻 JB FM</button>
+        <button class="btn-midia" onclick="tocarTupi()">📻 Tupi</button>
         <button class="btn-midia" id="btn-parar" onclick="pararTudo()" style="display:none">⏹ Parar</button>
         <div class="midia-url-wrap">
           <input id="midia-url-input" type="text" placeholder="YouTube, Drive ou MP4...">
@@ -142,6 +143,7 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   const GID_PROGRAMACAO='1927943649';
   const SYNC_INTERVAL=5*60*1000,TEMPO_AVISO=10000;
   const JBFM_STREAM='https://27613.live.streamtheworld.com/JBFMAAC.aac';
+  const TUPI_STREAM='https://8923.brasilstream.com.br/stream?origem=site';
   const CLIMA_LAT=-22.7592,CLIMA_LON=-43.4511;
   const CLIMA_INT=600000;
   const WMO_IC={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌦️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
@@ -206,6 +208,17 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
   }
   function pararAudio(){const a=document.getElementById('player-audio');a.pause();a.src='';radioAtiva=false;}
   function pararTudo(){pararAudio();fecharVideoSemRetomar();setStatus('Parado');}
+
+  function tocarTupi(){
+    pararTudo();
+    const a=document.getElementById('player-audio');
+    a.src=TUPI_STREAM;a.load();
+    const tryPlay=()=>{
+      a.play().then(()=>{radioAtiva=true;setStatus('Tupi RJ ao vivo',true);})
+              .catch(()=>{setTimeout(()=>{a.play().then(()=>{radioAtiva=true;setStatus('Tupi RJ ao vivo',true);}).catch(()=>setStatus('Tupi — clique para tocar'));},3000);});
+    };
+    setTimeout(tryPlay,500);
+  }
 
   function tocarRadio(){
     pararTudo();
@@ -320,8 +333,10 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
       const cmd    = (r[2]||'').trim().toLowerCase();
       const url    = (r[3]||'').trim();
       const dias   = (r[4]||'todos').trim().toLowerCase(); // todos, seg-sex, fins
+      const ativo  = (r[5]||'SIM').trim().toUpperCase(); // SIM/NAO
 
       if(!inicio||!fim||!cmd) continue;
+      if(ativo==='NAO'||ativo==='NÃO') continue;
 
       // Verificar dia da semana
       const diaSemana = agora.getDay(); // 0=dom, 6=sab
@@ -339,7 +354,8 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
         if(chave === ultimaProgramacao) return;
         ultimaProgramacao = chave;
         if(cmd==='video'&&url)   _tocarUrlInterna(url);
-        else if(cmd==='radio')   tocarRadio();
+        else if(cmd==='radio'||cmd==='jbfm') tocarRadio();
+        else if(cmd==='tupi')    tocarTupi();
         else if(cmd==='parar')   pararTudo();
         return;
       }
@@ -359,7 +375,8 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
     const chave=acao+'|'+valor;
     if(chave===ultimoControle)return;
     ultimoControle=chave;
-    if(acao==='radio_on'){modoPlaylist=false;playlist=[];tocarRadio();}
+    if(acao==='radio_on'||acao==='jbfm'){modoPlaylist=false;playlist=[];tocarRadio();}
+    else if(acao==='tupi'){modoPlaylist=false;playlist=[];tocarTupi();}
     else if(acao==='radio_off'||acao==='parar'){
       modoPlaylist=false;playlist=[];
       clearTimeout(window._ytTimer);
