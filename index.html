@@ -375,22 +375,51 @@ const FEEDS=[
   {nome:'CNN', url:'https://www.cnnbrasil.com.br/feed/'},
 ];
 
+const PROXIES=[
+  u=>'https://api.allorigins.win/get?url='+encodeURIComponent(u),
+  u=>'https://corsproxy.io/?'+encodeURIComponent(u),
+  u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+];
+
+const NOTICIAS_FALLBACK=[
+  {fonte:'DICA',  titulo:'Mantenha o ambiente de trabalho organizado e seguro para todos.'},
+  {fonte:'DICA',  titulo:'Em caso de emergência, acione o responsável imediatamente.'},
+  {fonte:'AVISO', titulo:'Confira os avisos do condomínio no painel ao lado.'},
+  {fonte:'AVISO', titulo:'Respeite os horários e normas internas da empresa.'},
+  {fonte:'INFO',  titulo:'Painel atualizado automaticamente a cada 10 minutos.'},
+];
+
+function parsearXML(text){
+  const xml=new DOMParser().parseFromString(text,'text/xml');
+  const items=xml.querySelectorAll('item');
+  const result=[];
+  items.forEach(item=>{
+    const title=item.querySelector('title');
+    if(title&&title.textContent){
+      let t=title.textContent.trim().replace(/<!\[CDATA\[|\]\]>/g,'').trim();
+      if(t&&t.length>5) result.push(t);
+    }
+  });
+  return result.slice(0,3);
+}
+
 async function fetchRSS(feedUrl){
-  try{
-    const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(feedUrl));
-    const d=await r.json();
-    const xml=new DOMParser().parseFromString(d.contents,'text/xml');
-    const items=xml.querySelectorAll('item');
-    const result=[];
-    items.forEach(item=>{
-      const title=item.querySelector('title');
-      if(title&&title.textContent){
-        let t=title.textContent.trim().replace(/<!\[CDATA\[|\]\]>/g,'').trim();
-        if(t&&t.length>5) result.push(t);
-      }
-    });
-    return result.slice(0,3);
-  }catch(e){return[];}
+  for(const makeProxy of PROXIES){
+    try{
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),6000);
+      const r=await fetch(makeProxy(feedUrl),{signal:ctrl.signal});
+      clearTimeout(tid);
+      if(!r.ok) continue;
+      const text=await r.text();
+      // allorigins devolve JSON com .contents
+      let xmlText=text;
+      try{const j=JSON.parse(text);if(j.contents)xmlText=j.contents;}catch(e){}
+      const titulos=parsearXML(xmlText);
+      if(titulos.length>0) return titulos;
+    }catch(e){continue;}
+  }
+  return [];
 }
 
 function mostrarNoticias(lista){
@@ -410,6 +439,12 @@ async function carregarNoticias(){
     FEEDS.map(f=>fetchRSS(f.url).then(ts=>ts.map(t=>({fonte:f.nome,titulo:t}))))
   );
   resultados.forEach(res=>{if(res.status==='fulfilled')res.value.forEach(i=>lista.push(i));});
+  // Se não veio nada de nenhuma fonte, usa fallback
+  if(!lista.length){
+    mostrarNoticias(NOTICIAS_FALLBACK);
+    todasNoticias=NOTICIAS_FALLBACK;
+    return;
+  }
   for(let i=lista.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lista[i],lista[j]]=[lista[j],lista[i]];}
   todasNoticias=lista;
   mostrarNoticias(lista.slice(0,MAX_NOTICIAS));
