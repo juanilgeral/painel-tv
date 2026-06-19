@@ -71,11 +71,11 @@ html,body{width:100vw;height:100vh;overflow:hidden;background:var(--azul2);color
 
 /* NOTÍCIAS */
 #noticias-box{padding:1.2vh 2vw;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
-#noticias-tag{font-family:'Barlow Condensed',sans-serif;font-size:1.2vw;font-weight:700;letter-spacing:0.3vw;text-transform:uppercase;color:var(--acc);margin-bottom:1vh;}
-.noticia-item{display:flex;align-items:baseline;gap:0.8vw;padding:0.55vh 0;border-bottom:1px solid rgba(255,255,255,.08);}
+#noticias-tag{font-family:'Barlow Condensed',sans-serif;font-size:1.1vw;font-weight:700;letter-spacing:0.3vw;text-transform:uppercase;color:var(--acc);margin-bottom:0.7vh;}
+.noticia-item{display:flex;align-items:baseline;gap:0.7vw;padding:0.45vh 0;border-bottom:1px solid rgba(255,255,255,.08);}
 .noticia-item:last-child{border:none;}
-.noticia-fonte{font-family:'Barlow Condensed',sans-serif;font-size:1.2vw;font-weight:700;letter-spacing:0.1vw;text-transform:uppercase;color:var(--acc);white-space:nowrap;min-width:4vw;}
-.noticia-titulo{font-family:'Barlow Condensed',sans-serif;font-size:1.5vw;color:rgba(255,255,255,0.95);line-height:1.3;font-weight:500;}
+.noticia-fonte{font-family:'Barlow Condensed',sans-serif;font-size:1.05vw;font-weight:700;letter-spacing:0.1vw;text-transform:uppercase;color:var(--acc);white-space:nowrap;min-width:3.8vw;flex-shrink:0;}
+.noticia-titulo{font-family:'Barlow Condensed',sans-serif;font-size:1.15vw;color:rgba(255,255,255,0.95);line-height:1.25;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #noticias-status{font-size:1.2vh;color:var(--muted);font-style:italic;}
 
 /* FRASE */
@@ -253,7 +253,7 @@ const CLIMA_LAT=-22.7592,CLIMA_LON=-43.4511;
 const CLIMA_INT=600000;
 const MERCADO_INT=120000;
 const NOTICIAS_INT=600000;
-const MAX_NOTICIAS=4;
+const MAX_NOTICIAS=5;
 
 const WMO_IC={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌦️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WMO_DC={0:'Céu limpo',1:'Predo. limpo',2:'Parc. nublado',3:'Nublado',45:'Nevoeiro',48:'Nevoeiro',51:'Garoa fraca',53:'Garoa moderada',55:'Garoa densa',61:'Chuva fraca',63:'Chuva moderada',65:'Chuva forte',80:'Pancadas fracas',81:'Pancadas moderadas',82:'Pancadas fortes',95:'Trovoadas',96:'Trovoadas',99:'Trovoadas'};
