@@ -782,20 +782,52 @@ fetchMercado(); setInterval(fetchMercado,MERCADO_INT);
 carregarNoticias(); setInterval(carregarNoticias,NOTICIAS_INT);
 verificarFeriado();
 
+/* Rádio automática com retry + overlay de desbloqueio */
+function autoIniciarRadio(){
+  const audio = document.getElementById('player-audio');
+  audio.src = JBFM_STREAM;
+  audio.load();
+
+  function tentarPlay(){
+    audio.play().then(()=>{
+      radioAtiva=true;
+      setStatus('JB FM ao vivo',true);
+      const ov=document.getElementById('radio-unlock-overlay');
+      if(ov) ov.remove();
+    }).catch(()=>{
+      // Navegador bloqueou — mostra botão de desbloqueio
+      if(!document.getElementById('radio-unlock-overlay')){
+        const ov=document.createElement('div');
+        ov.id='radio-unlock-overlay';
+        ov.style.cssText='position:fixed;bottom:7vh;left:50%;transform:translateX(-50%);z-index:500;background:var(--acc);color:var(--azul);font-family:"Barlow Condensed",sans-serif;font-size:1.8vw;font-weight:900;padding:1vh 2vw;border-radius:8px;cursor:pointer;letter-spacing:0.1vw;box-shadow:0 0 20px rgba(240,165,0,0.5);';
+        ov.textContent='▶ TOQUE AQUI PARA ATIVAR O SOM';
+        ov.onclick=()=>{audio.play().then(()=>{radioAtiva=true;setStatus('JB FM ao vivo',true);ov.remove();});};
+        document.body.appendChild(ov);
+      }
+    });
+  }
+
+  setTimeout(tentarPlay, 1500);
+  // Segunda tentativa após 5s caso ainda não tenha tocado
+  setTimeout(()=>{ if(!radioAtiva) tentarPlay(); }, 5000);
+  // Terceira tentativa após 10s
+  setTimeout(()=>{ if(!radioAtiva) tentarPlay(); }, 10000);
+}
+
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',()=>{
     initFully();cicloCompleto();
     setInterval(cicloCompleto,SYNC_INTERVAL);
     setInterval(verificarControle,10*1000);
     setInterval(verificarProgramacao,60*1000);
-    setTimeout(()=>tocarRadio(),2000);
+    autoIniciarRadio();
   });
 }else{
   initFully();cicloCompleto();
   setInterval(cicloCompleto,SYNC_INTERVAL);
   setInterval(verificarControle,10*1000);
   setInterval(verificarProgramacao,60*1000);
-  setTimeout(()=>tocarRadio(),2000);
+  autoIniciarRadio();
 }
 </script>
 </body>
