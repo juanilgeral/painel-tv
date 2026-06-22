@@ -745,10 +745,10 @@ function isYoutube(url){return url.includes('youtube.com')||url.includes('youtu.
 function abrirYoutubeExterno(url){
   if(radioAtiva)pararAudio();
 
-  // Fully Kiosk: abre o YouTube no browser nativo (sem restrição de embed)
+  // Fully Kiosk: carrega o YouTube direto na janela principal (sem embed)
   if(typeof fully!=='undefined'){
     try{
-      fully.openBrowser(url);
+      fully.loadURL(url);
       videoAtivo=true;
       setStatus('YouTube tocando',true);
       return;
