@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player YouTube — Juanil</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #000;
+    }
+    iframe {
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+    }
+    #erro {
+      display: none;
+      position: fixed; inset: 0;
+      background: #000;
+      color: #f0a500;
+      font-family: monospace;
+      font-size: 2vw;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1em;
+      text-align: center;
+    }
+    #erro button {
+      margin-top: 1em;
+      padding: 0.5em 2em;
+      background: #f0a500;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.5vw;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<iframe id="player" allowfullscreen
+  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+  src="about:blank">
+</iframe>
+
+<div id="erro">
+  <span>⚠ Não foi possível carregar o vídeo.</span>
+  <button onclick="voltarPainel()">← Voltar ao Painel</button>
+</div>
+
+<script>
+  /* ===================================================
+     yt-player.html — Juanil Transportes e Locações
+     Recebe parâmetros via URL:
+       ?v=VIDEO_ID          → vídeo do YouTube pelo ID
+       ?url=URL_COMPLETA    → URL completa (encode)
+     ===================================================*/
+
+  function getParam(nome) {
+    return new URLSearchParams(window.location.search).get(nome);
+  }
+
+  function extrairId(url) {
+    const m1 = url.match(/[?&]v=([^&]+)/);
+    const m2 = url.match(/youtu\.be\/([^?]+)/);
+    const m3 = url.match(/\/live\/([^?]+)/);
+    return (m1 && m1[1]) || (m2 && m2[1]) || (m3 && m3[1]) || null;
+  }
+
+  function voltarPainel() {
+    if (typeof fully !== 'undefined') {
+      try { fully.loadStartURL(); return; } catch(e) {}
+    }
+    window.history.back();
+  }
+
+  function init() {
+    let id = getParam('v');
+
+    // Se veio URL completa, extrai o ID
+    if (!id) {
+      const rawUrl = getParam('url');
+      if (rawUrl) {
+        const decoded = decodeURIComponent(rawUrl);
+        id = extrairId(decoded);
+      }
+    }
+
+    if (!id) {
+      document.getElementById('erro').style.display = 'flex';
+      return;
+    }
+
+    const embedUrl =
+      'https://www.youtube-nocookie.com/embed/' + id +
+      '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&iv_load_policy=3&fs=1';
+
+    document.getElementById('player').src = embedUrl;
+
+    // Fully Kiosk: tela cheia e tela ligada
+    if (typeof fully !== 'undefined') {
+      try { fully.setFullScreen(true); } catch(e) {}
+      try { fully.turnScreenOn(); } catch(e) {}
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>
