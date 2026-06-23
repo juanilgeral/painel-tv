@@ -745,19 +745,11 @@ function isYoutube(url){return url.includes('youtube.com')||url.includes('youtu.
 function abrirYoutubeExterno(url){
   if(radioAtiva)pararAudio();
 
-  // Fully Kiosk: abre o app YouTube nativo via startApplication + intent URL
+  // Fully Kiosk: carrega yt-player.html que redireciona para o YouTube oficial
   if(typeof fully!=='undefined'){
     try{
-      // Extrai ID do vídeo
-      const m1=url.match(/[?&]v=([^&]+)/);
-      const m2=url.match(/youtu\.be\/([^?]+)/);
-      const m3=url.match(/\/live\/([^?]+)/);
-      const id=(m1&&m1[1])||(m2&&m2[1])||(m3&&m3[1])||null;
-      // Intent URL abre direto no app YouTube instalado, sem WebView
-      const intentUrl=id
-        ? 'intent://www.youtube.com/watch?v='+id+'#Intent;package=com.google.android.youtube;scheme=https;end'
-        : 'intent://'+url.replace(/^https?:\/\//,'')+'#Intent;package=com.google.android.youtube;scheme=https;end';
-      fully.loadURL(intentUrl);
+      const playerUrl='https://juanilgeral.github.io/painel-tv/yt-player.html?url='+encodeURIComponent(url);
+      fully.loadURL(playerUrl);
       videoAtivo=true;
       setStatus('YouTube tocando',true);
       return;
