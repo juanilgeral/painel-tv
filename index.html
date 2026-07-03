@@ -354,13 +354,19 @@ fasesDaLua();
    ========================================================= */
 async function fetchClima(){
   try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+CLIMA_LAT+'&longitude='+CLIMA_LON+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,windspeed_10m&timezone=America%2FSao_Paulo');
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),10000);
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+CLIMA_LAT+'&longitude='+CLIMA_LON+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,windspeed_10m&timezone=America%2FSao_Paulo',{signal:controller.signal});
+    clearTimeout(timeoutId);
     const d=await r.json();const cv=d.current;
     document.getElementById('clima-icone').textContent=WMO_IC[cv.weathercode]||'🌡️';
     document.getElementById('clima-temp').innerHTML=Math.round(cv.temperature_2m)+'<sup>°C</sup>';
     document.getElementById('clima-desc').textContent=WMO_DC[cv.weathercode]||'Variável';
     document.getElementById('clima-detalhes').textContent='Sensação '+Math.round(cv.apparent_temperature)+'°C  ·  Umidade '+cv.relative_humidity_2m+'%  ·  Vento '+Math.round(cv.windspeed_10m)+' km/h';
-  }catch(e){}
+  }catch(e){
+    console.warn('[Clima] Falha ou timeout ao buscar previsão, tentando novamente em 30s:',e);
+    setTimeout(fetchClima,30000);
+  }
 }
 
 /* =========================================================
@@ -838,6 +844,7 @@ async function cicloCompleto(){await sincronizar();await verificarControle();}
 setTimeout(async()=>{
   if(document.getElementById('aviso-titulo').textContent==='Carregando...') await carregarAvisos();
   if(document.getElementById('frase-texto').textContent==='Carregando...') await carregarFrase();
+  if(document.getElementById('clima-desc').textContent==='Carregando...') await fetchClima();
 },15000);
 
 fetchClima(); setInterval(fetchClima,CLIMA_INT);
