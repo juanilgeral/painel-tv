@@ -472,7 +472,7 @@ async function fetchIbovespa(){
 }
 
 /* =========================================================
-   NOTÍCIAS via RSS
+   NOTÍCIAS via RSS (rss2json + proxies de fallback)
    ========================================================= */
 const FEEDS=[
   {nome:'G1',  url:'https://g1.globo.com/rss/g1/'},
@@ -509,7 +509,24 @@ function parsearXML(text){
   return result.slice(0,3);
 }
 
-async function fetchRSS(feedUrl){
+async function fetchViaRss2Json(feedUrl){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const api='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(feedUrl);
+    const r=await fetch(api,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok) return [];
+    const data=await r.json();
+    if(data.status!=='ok'||!Array.isArray(data.items)) return [];
+    return data.items
+      .map(it=>(it.title||'').trim())
+      .filter(t=>t.length>5)
+      .slice(0,3);
+  }catch(e){return [];}
+}
+
+async function fetchViaProxy(feedUrl){
   for(const makeProxy of PROXIES){
     try{
       const ctrl=new AbortController();
@@ -518,7 +535,6 @@ async function fetchRSS(feedUrl){
       clearTimeout(tid);
       if(!r.ok) continue;
       const text=await r.text();
-      // allorigins devolve JSON com .contents
       let xmlText=text;
       try{const j=JSON.parse(text);if(j.contents)xmlText=j.contents;}catch(e){}
       const titulos=parsearXML(xmlText);
@@ -526,6 +542,14 @@ async function fetchRSS(feedUrl){
     }catch(e){continue;}
   }
   return [];
+}
+
+async function fetchRSS(feedUrl){
+  // 1) tenta rss2json (mais estável e retorna JSON pronto)
+  let titulos=await fetchViaRss2Json(feedUrl);
+  if(titulos.length>0) return titulos;
+  // 2) fallback nos proxies CORS antigos
+  return await fetchViaProxy(feedUrl);
 }
 
 function mostrarNoticias(lista){
@@ -546,8 +570,9 @@ async function carregarNoticias(){
   );
   resultados.forEach(res=>{if(res.status==='fulfilled')res.value.forEach(i=>lista.push(i));});
   if(!lista.length){mostrarNoticias(NOTICIAS_FALLBACK);return;}
+  // embaralha e limita para não repetir demais
   for(let i=lista.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lista[i],lista[j]]=[lista[j],lista[i]];}
-  mostrarNoticias(lista);
+  mostrarNoticias(lista.slice(0,Math.max(MAX_NOTICIAS,8)));
 }
 
 /* =========================================================
