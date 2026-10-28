@@ -899,29 +899,50 @@ async function carregarAvisos(){
   // AVISO ESPECIAL: Curso NR-1 (aparece 2x por rodada, 45s cada)
   const avisoNR1 = {
     titulo: "CURSO NR-1",
-    texto: `<div style="font-size:2.8vw;line-height:1.45;font-weight:500;">
-      <div style="font-size:3.2vw;font-weight:900;color:#f0a500;margin-bottom:1vh;text-align:center;">SAÚDE MENTAL NO TRABALHO</div>
-      <div style="text-align:center;margin-bottom:1.5vh;">Curso obrigatório à distância em parceria com <strong style="color:#f0a500;">ASSERT SAÚDE</strong></div>
-      <div style="background:rgba(240,165,0,0.15);padding:1.5vh 2vw;border-radius:8px;margin:1.5vh 0;">
-        <div style="font-size:3.4vw;font-weight:900;color:#fff;">PRAZO: <span style="color:#e74c3c;">16/11/2026</span></div>
-        <div style="font-size:2.6vw;margin-top:0.5vh;">Login e senha enviados em <strong>27/10/26</strong> por e-mail e/ou WhatsApp</div>
-        <div style="font-size:2.4vw;margin-top:0.3vh;">Assunto: <strong style="color:#2ecc71;">CONFIRME SEU CADASTRO ASSERT SAÚDE</strong></div>
+    texto: `<div style="font-size:3.1vw;line-height:1.35;font-weight:600;text-align:center;">
+      <div style="font-size:3.8vw;font-weight:900;color:#f0a500;margin-bottom:1.2vh;letter-spacing:0.05vw;">SAÚDE MENTAL NO TRABALHO</div>
+      <div style="font-size:2.8vw;margin-bottom:1.8vh;">Curso <strong style="color:#fff;">obrigatório</strong> à distância<br>em parceria com <strong style="color:#f0a500;">ASSERT SAÚDE</strong></div>
+      <div style="background:rgba(240,165,0,0.22);padding:2vh 2.5vw;border-radius:12px;margin:1.5vh auto;max-width:90%;border:2px solid rgba(240,165,0,0.5);">
+        <div style="font-size:4vw;font-weight:900;color:#fff;">PRAZO FINAL<br><span style="color:#e74c3c;font-size:4.4vw;">16/11/2026</span></div>
+        <div style="font-size:2.9vw;margin-top:1vh;">Login e senha enviados em <strong>27/10/26</strong><br>por e-mail e/ou WhatsApp</div>
+        <div style="font-size:2.6vw;margin-top:0.6vh;">Assunto do e-mail:<br><strong style="color:#2ecc71;">CONFIRME SEU CADASTRO ASSERT SAÚDE</strong></div>
       </div>
-      <div style="font-size:2.5vw;text-align:center;">7 vídeo-aulas • Individual e obrigatório<br>Verifique também a caixa de SPAM</div>
-      <div style="margin-top:1.5vh;font-size:2.2vw;text-align:center;opacity:0.9;">Dúvidas? Procure o escritório.</div>
+      <div style="font-size:2.7vw;margin-top:1vh;">7 vídeo-aulas • Individual<br>Verifique também a caixa de <strong>SPAM</strong></div>
+      <div style="margin-top:1.2vh;font-size:2.3vw;opacity:0.95;">Dúvidas? Procure o escritório.</div>
     </div>`,
     icone: "📚",
     tag: "OBRIGATÓRIO • ATÉ 16/11/2026",
     html: true,
     duracao: 45000
   };
-  // Insere o aviso duas vezes na rodada (início e meio)
+  // AVISO ESPECIAL: Canal de Relacionamento (aparece 2x por rodada, 45s cada)
+  const avisoCanal = {
+    titulo: "CANAL DE RELACIONAMENTO",
+    texto: `<div style="font-size:3.2vw;line-height:1.3;font-weight:600;text-align:center;">
+      <div style="font-size:4.2vw;font-weight:900;color:#e74c3c;margin-bottom:1.5vh;letter-spacing:0.08vw;">DENUNCIE • RECLAME • ELOGIE</div>
+      <div style="font-size:2.9vw;margin-bottom:2vh;color:#f0a500;">Sua voz é importante para a empresa</div>
+      <div style="background:rgba(255,255,255,0.08);padding:2vh 2vw;border-radius:12px;margin:1.2vh auto;max-width:92%;border:2px solid rgba(240,165,0,0.4);">
+        <div style="font-size:2.7vw;margin-bottom:1vh;"><strong>Anônimo:</strong><br><span style="color:#4fc3f7;font-size:2.4vw;">https://forms.gle/ei7SuBakGJd2miFW7</span></div>
+        <div style="font-size:2.8vw;margin:1vh 0;"><strong>WhatsApp:</strong> <span style="color:#2ecc71;">21 97250-6099</span></div>
+        <div style="font-size:2.6vw;"><strong>E-mail:</strong><br><span style="color:#4fc3f7;">reclame_aqui@juanil.com.br</span></div>
+      </div>
+      <div style="margin-top:1.5vh;font-size:2.4vw;opacity:0.95;">Utilize o canal com responsabilidade.</div>
+    </div>`,
+    icone: "📢",
+    tag: "CANAL INTERNO • ANÔNIMO",
+    html: true,
+    duracao: 45000
+  };
+
+  // Insere os dois avisos especiais duas vezes cada na rodada
   if (lista.length > 0) {
     lista.unshift(avisoNR1);
-    const meio = Math.max(1, Math.floor(lista.length / 2));
+    lista.unshift(avisoCanal);
+    const meio = Math.max(2, Math.floor(lista.length / 2));
     lista.splice(meio, 0, avisoNR1);
+    lista.splice(meio + 1, 0, avisoCanal);
   } else {
-    lista.push(avisoNR1, avisoNR1);
+    lista.push(avisoNR1, avisoCanal, avisoNR1, avisoCanal);
   }
 
   avisos=lista;clearTimeout(avisoTimer);avisoIdx=0;mostrarAviso(avisos[0]);
