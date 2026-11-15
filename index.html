@@ -69,8 +69,46 @@ function stopRadio(){clearTimeout(radioTimer);try{audio.pause();audio.removeAttr
 function savedRadioTimer(){try{return JSON.parse(localStorage.getItem(RADIO_TIMER_KEY)||'null')}catch(e){return null}}
 function saveRadioTimer(state){try{localStorage.setItem(RADIO_TIMER_KEY,JSON.stringify(state))}catch(e){}}
 function syncRadioTimer(isOn,minutes){const n=Number(minutes);radioMinutes=Number.isFinite(n)?Math.max(0,n):0;let state=savedRadioTimer();if(!isOn){state={on:false,startedAt:0,minutes:radioMinutes};radioStartedAt=0;radioExpired=false;saveRadioTimer(state);return}if(!state||!state.on||!Number(state.startedAt)){state={on:true,startedAt:Date.now(),minutes:radioMinutes}}else{state={on:true,startedAt:Number(state.startedAt),minutes:radioMinutes}}radioStartedAt=state.startedAt;radioExpired=radioMinutes>0&&Date.now()-radioStartedAt>=radioMinutes*60000;saveRadioTimer(state)}
-function startRadio(){if(!radioAllowed()){if(radioExpired)radioTag('JB FM · tempo configurado encerrado');buttonState();return}audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(!audio.src){radioTries++;audio.src=radioTries>1?RADIO_URL+(RADIO_URL.includes('?')?'&':'?')+'t='+Date.now():RADIO_URL;try{audio.load()}catch(e){}}let p;try{p=audio.play()}catch(e){p=Promise.reject(e)}if(p?.catch)p.catch(err=>{console.warn('JB FM:',err.name,err.message);radioTag(err.name==='NotAllowedError'?'Toque em ATIVAR SOM para liberar o áudio':'JB FM conectando…');clearTimeout(radioTimer);radioTimer=setTimeout(startRadio,3000)});buttonState()}
-function applyRadio(){if(radioDrive===false){stopRadio();radioTag('');return}if(radioExpired){stopRadio();radioTag('JB FM · tempo configurado encerrado');return}if(radioAllowed()){audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(audio.paused)startRadio()}buttonState()}
+function unmuteOnGesture(){
+  const go=()=>{
+    audio.muted=false;
+    audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));
+    radioTag('♪ JB FM AO VIVO');
+    document.removeEventListener('pointerdown',go);
+    document.removeEventListener('keydown',go);
+  };
+  document.addEventListener('pointerdown',go);
+  document.addEventListener('keydown',go);
+}
+
+function startRadio(){
+  if(!radioAllowed()){
+    if(radioExpired) radioTag('JB FM · tempo configurado encerrado');
+    buttonState();
+    return;
+  }
+  audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));
+  if(!audio.src){
+    radioTries++;
+    audio.src=radioTries>1?RADIO_URL+(RADIO_URL.includes('?')?'&':'?')+'t='+Date.now():RADIO_URL;
+    try{audio.load()}catch(e){}
+  }
+  audio.muted=true;
+  let p;
+  try{p=audio.play()}catch(e){p=Promise.reject(e)}
+  if(p?.then){
+    p.then(()=>{
+      unmuteOnGesture();
+      radioTag('♪ JB FM AO VIVO');
+    }).catch(err=>{
+      console.warn('JB FM:',err.name,err.message);
+      radioTag('JB FM conectando…');
+      clearTimeout(radioTimer);
+      radioTimer=setTimeout(startRadio,3000);
+    });
+  }
+  buttonState();
+}function applyRadio(){if(radioDrive===false){stopRadio();radioTag('');return}if(radioExpired){stopRadio();radioTag('JB FM · tempo configurado encerrado');return}if(radioAllowed()){audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(audio.paused)startRadio()}buttonState()}
 function checkRadioDeadline(){if(radioDrive!==true||!radioStartedAt||radioMinutes<=0||radioExpired)return;if(Date.now()-radioStartedAt>=radioMinutes*60000){radioExpired=true;saveRadioTimer({on:true,startedAt:radioStartedAt,minutes:radioMinutes});stopRadio();radioTag('JB FM · tempo configurado encerrado')}}
 $('#radioButton').addEventListener('click',()=>{if(radioDrive!==true){radioTag('Ligue RADIO na planilha para permitir a JB FM');return}if(radioExpired){radioTag('JB FM · tempo configurado encerrado; desligue e ligue RADIO na planilha para reiniciar');return}startRadio()});
 audio.addEventListener('playing',()=>{radioTries=0;radioLast=Date.now();radioTag('♪ JB FM AO VIVO');buttonState()});audio.addEventListener('waiting',()=>radioTag('♪ JB FM conectando…'));audio.addEventListener('timeupdate',()=>{if(audio.currentTime!==radioTime){radioTime=audio.currentTime;radioLast=Date.now()}});audio.addEventListener('error',()=>{if(radioAllowed()){radioTag('JB FM tentando reconectar…');clearTimeout(radioTimer);radioTimer=setTimeout(()=>{audio.removeAttribute('src');startRadio()},4000)}});audio.addEventListener('pause',buttonState);
