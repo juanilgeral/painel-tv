@@ -232,12 +232,18 @@ const cv = (k,d) => (S.ctrl[k]!==undefined && S.ctrl[k]!=="") ? S.ctrl[k] : d;
 const cn = (k,d) => { const n=parseFloat(String(cv(k,d)).replace(",",".")); return isNaN(n)?d:n; };
 const cb = (k,d) => isYes(cv(k, d?"SIM":"NAO"));
 
-/* ===== RÁDIO (JB FM) - VERSÃO FORTE ===== */
-const radio = new Audio();
-radio.preload = "auto";
-radio.autoplay = true;
+/* ===== RÁDIO (JB FM) ===== */
+const radio = document.createElement("audio");
+radio.preload = "none";
+radio.setAttribute("playsinline","");
+radio.style.display = "none";
+document.body.appendChild(radio);
+
 let radioSusp = false;
 let radioTentativas = 0;
+let radioRetryTimer = null;
+let radioUltimoTempo = -1;
+let radioUltimoProgresso = Date.now();
 
 const radioQuer = () => isYes(cv("RADIO","DESLIGADA")) && !radioSusp;
 
@@ -246,69 +252,136 @@ function mostrarDesbloqueio(v){
   if(el) el.style.display = v ? "block" : "none";
 }
 
+function tagRadio(txt){
+  const t = $("#radioTag");
+  if(!t) return;
+  if(txt){ t.textContent = txt; t.hidden = false; }
+  else t.hidden = true;
+}
+
+function radioParar(){
+  clearTimeout(radioRetryTimer);
+  try{ radio.pause(); }catch(e){}
+  if(radio.getAttribute("src")){
+    radio.removeAttribute("src");
+    try{ radio.load(); }catch(e){}
+  }
+  mostrarDesbloqueio(false);
+  tagRadio("");
+}
+
+function radioAgendar(ms){
+  clearTimeout(radioRetryTimer);
+  radioRetryTimer = setTimeout(aplicarRadio, ms);
+}
+
+function radioTocar(){
+  let p;
+  try{ p = radio.play(); }catch(e){ p = Promise.reject(e); }
+  if(p && p.then){
+    p.then(()=>{
+      radioTentativas = 0;
+      radioUltimoProgresso = Date.now();
+      mostrarDesbloqueio(false);
+    }).catch(err=>{
+      console.warn("Rádio play falhou:", err && err.name, err && err.message);
+      if(err && err.name === "NotAllowedError"){
+        tagRadio("♪ JB FM · toque p/ ativar");
+        mostrarDesbloqueio(true);
+        radioAgendar(3000);
+      } else if(err && err.name === "AbortError"){
+        radioAgendar(2500);
+      } else {
+        radioReiniciar();
+      }
+    });
+  }
+}
+
+// Recarrega o stream do zero (com parâmetro anti-cache nas tentativas)
+function radioReiniciar(){
+  radioTentativas++;
+  clearTimeout(radioRetryTimer);
+  try{ radio.pause(); }catch(e){}
+  const sep = RADIO_URL.indexOf("?")>-1 ? "&" : "?";
+  radio.src = radioTentativas > 1 ? RADIO_URL + sep + "t=" + Date.now() : RADIO_URL;
+  try{ radio.load(); }catch(e){}
+  radioUltimoProgresso = Date.now();
+  tagRadio("♪ JB FM · conectando…");
+  radioTocar();
+}
+
 function aplicarRadio(){
   radio.volume = Math.min(1, Math.max(0, cn("RADIO_VOLUME",50)/100));
 
-  if(!radioQuer()){
-    if(!radio.paused) radio.pause();
-    if(radio.src){ radio.removeAttribute("src"); radio.load(); }
-    mostrarDesbloqueio(false);
-    $("#radioTag").hidden = true;
+  if(!radioQuer()){ radioParar(); return; }
+
+  if(!radio.getAttribute("src")){
+    radioReiniciar();
     return;
   }
 
-  if(!radio.src || radio.src.indexOf("JBFMAAC") === -1){
-    radio.src = RADIO_URL;
+  if(radio.paused || radio.ended || radio.error){
+    if(radio.error || radio.ended) radioReiniciar();
+    else { tagRadio("♪ JB FM · conectando…"); radioTocar(); }
+    return;
   }
 
-  if(radio.paused || radio.ended || radio.error){
-    const p = radio.play();
-    if(p !== undefined){
-      p.then(()=>{
-        radioTentativas = 0;
-        mostrarDesbloqueio(false);
-        $("#radioTag").hidden = false;
-      }).catch(err=>{
-        radioTentativas++;
-        console.warn("Rádio falhou:", err.message);
-        if(radioTentativas < 10) setTimeout(aplicarRadio, 2500);
-        else mostrarDesbloqueio(true);
-      });
-    }
-  } else {
-    $("#radioTag").hidden = false;
-    mostrarDesbloqueio(false);
-  }
+  // Tocando
+  if(radio.readyState >= 3 && !radio.paused) tagRadio("♪ JB FM");
 }
 
 function radioSuspender(v){ radioSusp = v; aplicarRadio(); }
 
 radio.addEventListener("playing", ()=>{
-  mostrarDesbloqueio(false);
-  $("#radioTag").hidden = false;
   radioTentativas = 0;
+  radioUltimoProgresso = Date.now();
+  mostrarDesbloqueio(false);
+  tagRadio("♪ JB FM");
+});
+
+radio.addEventListener("waiting", ()=>{ if(radioQuer()) tagRadio("♪ JB FM · conectando…"); });
+radio.addEventListener("stalled", ()=>{ if(radioQuer()) tagRadio("♪ JB FM · conectando…"); });
+
+radio.addEventListener("timeupdate", ()=>{
+  if(radio.currentTime !== radioUltimoTempo){
+    radioUltimoTempo = radio.currentTime;
+    radioUltimoProgresso = Date.now();
+  }
 });
 
 radio.addEventListener("pause", ()=>{
-  if(radioQuer()) setTimeout(aplicarRadio, 2000);
-  else $("#radioTag").hidden = true;
+  if(radioQuer()) radioAgendar(2000);
+});
+
+radio.addEventListener("ended", ()=>{
+  if(radioQuer()) radioAgendar(2000);
 });
 
 radio.addEventListener("error", ()=>{
-  console.warn("Erro no stream, reiniciando...");
-  radio.removeAttribute("src");
-  setTimeout(aplicarRadio, 4000);
+  if(!radioQuer()) return;
+  const cod = radio.error ? radio.error.code : "?";
+  console.warn("Erro no stream da rádio, código:", cod);
+  tagRadio("♪ JB FM · erro ("+cod+")");
+  clearTimeout(radioRetryTimer);
+  radioRetryTimer = setTimeout(radioReiniciar, 4000);
 });
 
+// Qualquer toque tenta ativar o som (necessário se o navegador bloquear autoplay)
 ["click","touchstart","keydown"].forEach(e=>{
-  addEventListener(e, ()=>aplicarRadio(), {passive:true});
+  addEventListener(e, ()=>{
+    if(radioQuer()){
+      if(!radio.getAttribute("src")) radioReiniciar();
+      else if(radio.paused) radioTocar();
+    }
+  }, {passive:true});
 });
 
+// Vigia: reinicia se parou, deu erro ou o áudio travou (sem avançar por 20 s)
 setInterval(()=>{
-  if(radioQuer() && (radio.paused || radio.error || radio.ended)){
-    radio.removeAttribute("src");
-    aplicarRadio();
-  }
+  if(!radioQuer()) return;
+  const travado = !radio.paused && (Date.now() - radioUltimoProgresso > 20000);
+  if(radio.paused || radio.error || radio.ended || travado) radioReiniciar();
 }, 12000);
 
 /* ===== RECARGA SOB DEMANDA ===== */
@@ -807,7 +880,7 @@ const seguro = fn => () => { Promise.resolve().then(fn).catch(e=>console.warn(e.
     sleep(20000)
   ]);
 
-  // Força a rádio logo no início
+  // Garante a rádio logo no início
   setTimeout(aplicarRadio, 1500);
   setTimeout(aplicarRadio, 4000);
   setTimeout(aplicarRadio, 8000);
