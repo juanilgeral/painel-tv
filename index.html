@@ -6,7 +6,7 @@
 <title>Painel Juanil</title>
 <style>
 :root{
-  --bg:#07162b; --bg2:#0e2f57; --card:rgba(255,255,255,.08); --line:rgba(255,255,255,.16);
+  --bg:#07162b; --bg2:#0e2f57; --card:rgba(255,255,255,.08);
   --accent:#f5a300; --text:#ffffff; --muted:#aebfd6;
   --ok:#2ecc71; --bad:#ff5a5f; --info:#3aa0ff; --urgent:#ff5a5f;
 }
@@ -108,7 +108,7 @@ footer{border-top:.15rem solid var(--accent);background:rgba(0,0,0,.35);height:3
     <div><h1>JUANIL</h1><small>Transportes e Locações</small></div>
   </div>
   <div class="relogio">
-    <div id="radioTag" hidden>&#9835; JB FM</div>
+    <div id="radioTag" hidden>♪ JB FM</div>
     <div><div id="hora">--:--</div><div id="data"></div></div>
   </div>
 </header>
@@ -124,10 +124,8 @@ footer{border-top:.15rem solid var(--accent);background:rgba(0,0,0,.35);height:3
 (() => {
 'use strict';
 
-/* =====================================================
-   CONFIGURAÇÃO
-   ===================================================== */
-const DRIVE_API_KEY  = "AIzaSyDJH9QfP7uxeWHgte71u1RItBBHNyef4m0"; // Coloque sua chave do Google Drive aqui
+/* ===== CONFIGURAÇÃO ===== */
+const DRIVE_API_KEY  = "AIzaSyDJH9QfP7uxeWHgte71u1RItBBHNyef4m0";
 const DRIVE_PASTA_ID = "1Tuaw8fG5hSoouRzUN7nF3fWdmlfLpile";
 const RADIO_URL      = "https://27613.live.streamtheworld.com/JBFMAAC.aac";
 const CLIMA_LOCAL    = { nome: "Nova Iguaçu", lat: -22.7592, lon: -43.4509 };
@@ -142,932 +140,688 @@ const GID = {
   RODAPE: "0"
 };
 
-/* =====================================================
-   UTILITÁRIOS
-   ===================================================== */
+/* ===== UTILITÁRIOS ===== */
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;"
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[c]));
 const norm = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
 const isYes = v => ["SIM","S","TRUE","1","LIGADA","LIGADO","ON"].includes(norm(v));
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-const hashStr = s => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return s.length + ":" + x; };
-const cortar = (s, n) => s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$/, "") + "…";
+const hashStr = s => { let x=0; for(let i=0;i<s.length;i++) x=(x*31+s.charCodeAt(i))|0; return s.length+":"+x; };
+const cortar = (s,n) => s.length<=n ? s : s.slice(0,n).replace(/\s+\S*$/,"")+"…";
 
-async function fetchText(url, ms = 15000) {
+async function fetchText(url, ms=15000){
   const c = new AbortController();
-  const t = setTimeout(() => c.abort(), ms);
-  try {
-    const r = await fetch(url, { signal: c.signal, cache: "no-store" });
-    if (!r.ok) throw new Error("HTTP " + r.status);
+  const t = setTimeout(()=>c.abort(), ms);
+  try{
+    const r = await fetch(url,{signal:c.signal,cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
     return await r.text();
-  } finally {
-    clearTimeout(t);
-  }
+  } finally { clearTimeout(t); }
 }
 
-function parseCSV(t) {
-  const rows = [];
-  let row = [], f = "", q = false;
-  t = t.replace(/^\uFEFF/, "");
-  for (let i = 0; i < t.length; i++) {
-    const c = t[i];
-    if (q) {
-      if (c === '"') {
-        if (t[i + 1] === '"') { f += '"'; i++; }
-        else q = false;
-      } else f += c;
-    } else if (c === '"') q = true;
-    else if (c === ",") { row.push(f); f = ""; }
-    else if (c === "\n" || c === "\r") {
-      if (c === "\r" && t[i + 1] === "\n") i++;
-      row.push(f); f = "";
-      rows.push(row); row = [];
-    } else f += c;
+function parseCSV(t){
+  const rows=[]; let row=[], f="", q=false;
+  t = t.replace(/^\uFEFF/,"");
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){
+      if(c==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; }
+      else f+=c;
+    } else if(c==='"') q=true;
+    else if(c===","){ row.push(f); f=""; }
+    else if(c==="\n"||c==="\r"){
+      if(c==="\r"&&t[i+1]==="\n") i++;
+      row.push(f); f=""; rows.push(row); row=[];
+    } else f+=c;
   }
-  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
   return rows;
 }
 
-function toObjects(rows) {
-  if (!rows.length) return [];
-  const head = rows[0].map(h => norm(h).replace(/\s+/g, "_"));
+function toObjects(rows){
+  if(!rows.length) return [];
+  const head = rows[0].map(h=>norm(h).replace(/\s+/g,"_"));
   return rows.slice(1)
-    .filter(r => r.some(c => String(c).trim() !== ""))
-    .map(r => {
-      const o = {};
-      head.forEach((h, i) => { if (h) o[h] = String(r[i] ?? "").trim(); });
+    .filter(r=>r.some(c=>String(c).trim()!==""))
+    .map(r=>{
+      const o={};
+      head.forEach((h,i)=>{ if(h) o[h]=String(r[i]??"").trim(); });
       return o;
     });
 }
 
 const sheetUrl = aba => SHEET_BASE + GID[aba] + "&t=" + Date.now();
-async function loadSheet(aba) { return toObjects(parseCSV(await fetchText(sheetUrl(aba)))); }
-async function loadSheetRaw(aba) { return parseCSV(await fetchText(sheetUrl(aba))); }
+async function loadSheet(aba){ return toObjects(parseCSV(await fetchText(sheetUrl(aba)))); }
+async function loadSheetRaw(aba){ return parseCSV(await fetchText(sheetUrl(aba))); }
 
-function parseData(s) {
-  s = String(s || "").trim();
+function parseData(s){
+  s = String(s||"").trim();
   let m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if (m) {
-    let y = +m[3];
-    if (y < 100) y += 2000;
-    return new Date(y, +m[2] - 1, +m[1]);
-  }
+  if(m){ let y=+m[3]; if(y<100) y+=2000; return new Date(y,+m[2]-1,+m[1]); }
   m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3]);
   return null;
 }
 
-function driveId(u) {
-  const m = String(u || "").match(/\/d\/([\w-]{20,})/) || String(u || "").match(/[?&]id=([\w-]{20,})/);
+function driveId(u){
+  const m = String(u||"").match(/\/d\/([\w-]{20,})/) || String(u||"").match(/[?&]id=([\w-]{20,})/);
   return m ? m[1] : null;
 }
 
-function recarregar() {
+function recarregar(){
   const u = new URL(location.href);
   u.searchParams.set("r", Date.now());
   location.replace(u.toString());
 }
 
-/* =====================================================
-   ESTADO
-   ===================================================== */
-const S = {
-  ctrl: {}, avisos: [], aniv: [], func: [], rodape: [],
-  noticias: [], clima: null, mercado: null, midia: []
-};
+/* ===== ESTADO ===== */
+const S = { ctrl:{}, avisos:[], aniv:[], func:[], rodape:[], noticias:[], clima:null, mercado:null, midia:[] };
 const sig = {};
 let versionUrgent = 0;
 let altaPtr = 0;
 
-function mudou(chave, valor, urgente) {
+function mudou(chave, valor, urgente){
   const s = JSON.stringify(valor);
-  if (sig[chave] !== s) {
-    sig[chave] = s;
-    S[chave] = valor;
-    if (urgente) versionUrgent++;
-  }
+  if(sig[chave] !== s){ sig[chave]=s; S[chave]=valor; if(urgente) versionUrgent++; }
 }
 
-const cv = (k, d) => (S.ctrl[k] !== undefined && S.ctrl[k] !== "") ? S.ctrl[k] : d;
-const cn = (k, d) => {
-  const n = parseFloat(String(cv(k, d)).replace(",", "."));
-  return isNaN(n) ? d : n;
-};
-const cb = (k, d) => isYes(cv(k, d ? "SIM" : "NAO"));
+const cv = (k,d) => (S.ctrl[k]!==undefined && S.ctrl[k]!=="") ? S.ctrl[k] : d;
+const cn = (k,d) => { const n=parseFloat(String(cv(k,d)).replace(",",".")); return isNaN(n)?d:n; };
+const cb = (k,d) => isYes(cv(k, d?"SIM":"NAO"));
 
-/* =====================================================
-   RÁDIO
-   ===================================================== */
+/* ===== RÁDIO (JB FM) - VERSÃO FORTE ===== */
 const radio = new Audio();
-radio.preload = "none";
+radio.preload = "auto";
+radio.autoplay = true;
 let radioSusp = false;
+let radioTentativas = 0;
 
-const radioQuer = () => isYes(cv("RADIO", "DESLIGADA")) && !radioSusp;
+const radioQuer = () => isYes(cv("RADIO","DESLIGADA")) && !radioSusp;
 
-function mostrarDesbloqueio(v) {
-  $("#unlock").style.display = v ? "block" : "none";
+function mostrarDesbloqueio(v){
+  const el = $("#unlock");
+  if(el) el.style.display = v ? "block" : "none";
 }
 
-function aplicarRadio() {
-  radio.volume = Math.min(1, Math.max(0, cn("RADIO_VOLUME", 50) / 100));
-  if (radioQuer()) {
-    if (!radio.getAttribute("src")) radio.src = RADIO_URL;
-    if (radio.paused) {
-      const p = radio.play();
-      if (p && p.catch) p.catch(() => mostrarDesbloqueio(true));
+function aplicarRadio(){
+  radio.volume = Math.min(1, Math.max(0, cn("RADIO_VOLUME",50)/100));
+
+  if(!radioQuer()){
+    if(!radio.paused) radio.pause();
+    if(radio.src){ radio.removeAttribute("src"); radio.load(); }
+    mostrarDesbloqueio(false);
+    $("#radioTag").hidden = true;
+    return;
+  }
+
+  if(!radio.src || radio.src.indexOf("JBFMAAC") === -1){
+    radio.src = RADIO_URL;
+  }
+
+  if(radio.paused || radio.ended || radio.error){
+    const p = radio.play();
+    if(p !== undefined){
+      p.then(()=>{
+        radioTentativas = 0;
+        mostrarDesbloqueio(false);
+        $("#radioTag").hidden = false;
+      }).catch(err=>{
+        radioTentativas++;
+        console.warn("Rádio falhou:", err.message);
+        if(radioTentativas < 10) setTimeout(aplicarRadio, 2500);
+        else mostrarDesbloqueio(true);
+      });
     }
   } else {
-    if (radio.getAttribute("src")) {
-      radio.pause();
-      radio.removeAttribute("src");
-      radio.load();
-    }
+    $("#radioTag").hidden = false;
     mostrarDesbloqueio(false);
   }
 }
 
-function radioSuspender(v) {
-  radioSusp = v;
-  aplicarRadio();
-}
+function radioSuspender(v){ radioSusp = v; aplicarRadio(); }
 
-radio.addEventListener("playing", () => {
+radio.addEventListener("playing", ()=>{
   mostrarDesbloqueio(false);
   $("#radioTag").hidden = false;
-});
-radio.addEventListener("pause", () => {
-  $("#radioTag").hidden = true;
+  radioTentativas = 0;
 });
 
-["click", "touchstart", "keydown"].forEach(e =>
-  addEventListener(e, () => aplicarRadio(), { passive: true })
-);
+radio.addEventListener("pause", ()=>{
+  if(radioQuer()) setTimeout(aplicarRadio, 2000);
+  else $("#radioTag").hidden = true;
+});
 
-setInterval(() => {
-  if (radioQuer() && (radio.paused || radio.error)) {
+radio.addEventListener("error", ()=>{
+  console.warn("Erro no stream, reiniciando...");
+  radio.removeAttribute("src");
+  setTimeout(aplicarRadio, 4000);
+});
+
+["click","touchstart","keydown"].forEach(e=>{
+  addEventListener(e, ()=>aplicarRadio(), {passive:true});
+});
+
+setInterval(()=>{
+  if(radioQuer() && (radio.paused || radio.error || radio.ended)){
     radio.removeAttribute("src");
     aplicarRadio();
   }
-}, 20000);
+}, 12000);
 
-/* =====================================================
-   RECARGA SOB DEMANDA
-   ===================================================== */
+/* ===== RECARGA SOB DEMANDA ===== */
 let primeiraControle = true;
-function checarRecarga() {
+function checarRecarga(){
   const KEY = "juanil_recarga_feita";
-  const pedido = norm(cv("RECARREGAR_PAINEL", "NAO")) === "SIM";
+  const pedido = norm(cv("RECARREGAR_PAINEL","NAO")) === "SIM";
   let marca = false;
-  try { marca = localStorage.getItem(KEY) === "1"; } catch (e) {}
-  if (!pedido) {
-    try { localStorage.removeItem(KEY); } catch (e) {}
-  } else if (!marca) {
-    try { localStorage.setItem(KEY, "1"); } catch (e) {}
-    if (!primeiraControle) recarregar();
+  try{ marca = localStorage.getItem(KEY)==="1"; }catch(e){}
+  if(!pedido){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  else if(!marca){
+    try{ localStorage.setItem(KEY,"1"); }catch(e){}
+    if(!primeiraControle) recarregar();
   }
   primeiraControle = false;
 }
 
-/* =====================================================
-   ATUALIZAÇÃO DE DADOS
-   ===================================================== */
-async function updControle() {
+/* ===== ATUALIZAÇÃO DE DADOS ===== */
+async function updControle(){
   const rows = await loadSheetRaw("CONTROLE");
   const c = {};
-  rows.forEach(r => {
-    const k = norm(r[0]).replace(/\s+/g, "_");
-    if (!k || k === "CHAVE") return;
-    c[k] = String(r[1] ?? "").trim();
+  rows.forEach(r=>{
+    const k = norm(r[0]).replace(/\s+/g,"_");
+    if(!k || k==="CHAVE") return;
+    c[k] = String(r[1]??"").trim();
   });
-  const resto = { ...c };
-  delete resto.RECARREGAR_PAINEL;
-  delete resto.RADIO;
-  delete resto.RADIO_VOLUME;
+  const resto = {...c};
+  delete resto.RECARREGAR_PAINEL; delete resto.RADIO; delete resto.RADIO_VOLUME;
   const s = JSON.stringify(resto);
-  if (sig.ctrl !== s) {
-    sig.ctrl = s;
-    versionUrgent++;
-  }
+  if(sig.ctrl !== s){ sig.ctrl=s; versionUrgent++; }
   S.ctrl = c;
   aplicarRadio();
   checarRecarga();
 }
 
-async function atualizarAba(chave, aba, urgente) {
-  try {
-    mudou(chave, await loadSheet(aba), urgente);
-  } catch (e) {
-    console.warn("Falha em", aba, e.message);
-  }
+async function atualizarAba(chave, aba, urgente){
+  try{ mudou(chave, await loadSheet(aba), urgente); }
+  catch(e){ console.warn("Falha em", aba, e.message); }
 }
 
-async function updSheets() {
+async function updSheets(){
   await Promise.all([
-    atualizarAba("avisos", "AVISOS", true),
-    atualizarAba("aniv", "ANIVERSARIOS", true),
-    atualizarAba("func", "FUNCIONARIO_MES", true),
-    atualizarAba("rodape", "RODAPE", false)
+    atualizarAba("avisos","AVISOS",true),
+    atualizarAba("aniv","ANIVERSARIOS",true),
+    atualizarAba("func","FUNCIONARIO_MES",true),
+    atualizarAba("rodape","RODAPE",false)
   ]);
   renderRodape();
 }
 
-/* ----- Notícias (RSS) ----- */
-function limpar(html) {
-  try {
-    return (new DOMParser().parseFromString(String(html || ""), "text/html").body.textContent || "")
-      .replace(/\s+/g, " ").trim();
-  } catch (e) {
-    return "";
-  }
+function limpar(html){
+  try{ return (new DOMParser().parseFromString(String(html||""),"text/html").body.textContent||"").replace(/\s+/g," ").trim(); }
+  catch(e){ return ""; }
 }
+const primeiraImg = h => { const m=String(h||"").match(/<img[^>]+src=["']([^"']+)/i); return m?m[1]:""; };
 
-const primeiraImg = h => {
-  const m = String(h || "").match(/<img[^>]+src=["']([^"']+)/i);
-  return m ? m[1] : "";
-};
-
-async function fetchRSS(url) {
-  try {
-    const j = JSON.parse(await fetchText(
-      "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url), 15000
-    ));
-    if (j.status === "ok" && j.items && j.items.length) {
-      return j.items.map(it => {
+async function fetchRSS(url){
+  try{
+    const j = JSON.parse(await fetchText("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(url),15000));
+    if(j.status==="ok" && j.items && j.items.length){
+      return j.items.map(it=>{
         const enc = it.enclosure && it.enclosure.link;
         const encImg = enc && /\.(jpe?g|png|webp|gif)/i.test(enc) ? enc : "";
-        return {
-          titulo: it.title || "",
-          desc: limpar(it.description || it.content),
-          img: it.thumbnail || encImg || primeiraImg(it.description || it.content),
-          data: it.pubDate || ""
-        };
+        return { titulo:it.title||"", desc:limpar(it.description||it.content), img:it.thumbnail||encImg||primeiraImg(it.description||it.content), data:it.pubDate||"" };
       });
     }
-  } catch (e) {
-    console.warn("rss2json falhou", e.message);
-  }
-
-  try {
-    const xml = await fetchText(
-      "https://api.allorigins.win/raw?url=" + encodeURIComponent(url), 15000
-    );
-    const doc = new DOMParser().parseFromString(xml, "text/xml");
-    return [...doc.querySelectorAll("item")].map(it => {
-      const g = t => {
-        const e = it.getElementsByTagName(t)[0];
-        return e ? e.textContent : "";
-      };
-      const mc = it.getElementsByTagNameNS("*", "content")[0] ||
-                it.getElementsByTagNameNS("*", "thumbnail")[0];
+  }catch(e){ console.warn("rss2json falhou", e.message); }
+  try{
+    const xml = await fetchText("https://api.allorigins.win/raw?url="+encodeURIComponent(url),15000);
+    const doc = new DOMParser().parseFromString(xml,"text/xml");
+    return [...doc.querySelectorAll("item")].map(it=>{
+      const g = t => { const e=it.getElementsByTagName(t)[0]; return e?e.textContent:""; };
+      const mc = it.getElementsByTagNameNS("*","content")[0] || it.getElementsByTagNameNS("*","thumbnail")[0];
       const desc = g("description");
-      return {
-        titulo: g("title"),
-        desc: limpar(desc),
-        img: (mc && mc.getAttribute("url")) || primeiraImg(desc),
-        data: g("pubDate")
-      };
+      return { titulo:g("title"), desc:limpar(desc), img:(mc&&mc.getAttribute("url"))||primeiraImg(desc), data:g("pubDate") };
     });
-  } catch (e) {
-    console.warn("allorigins falhou", e.message);
-  }
+  }catch(e){ console.warn("allorigins falhou", e.message); }
   return [];
 }
 
-async function updNoticias() {
-  const cfg = (await loadSheet("NOTICIAS")).filter(r => isYes(r.ATIVO) && r.URL_RSS);
-  const cache = {};
-  const out = [];
-  for (const p of cfg) {
-    if (!cache[p.URL_RSS]) cache[p.URL_RSS] = await fetchRSS(p.URL_RSS);
-    const qtd = parseInt(p.QTD || p.QUANTIDADE, 10) || 5;
-    out.push({
-      pacote: p.PACOTE || "",
-      fonte: p.FONTE || "",
-      items: cache[p.URL_RSS].slice(0, qtd)
-    });
+async function updNoticias(){
+  const cfg = (await loadSheet("NOTICIAS")).filter(r=>isYes(r.ATIVO)&&r.URL_RSS);
+  const cache = {}; const out = [];
+  for(const p of cfg){
+    if(!cache[p.URL_RSS]) cache[p.URL_RSS] = await fetchRSS(p.URL_RSS);
+    const qtd = parseInt(p.QTD||p.QUANTIDADE,10)||5;
+    out.push({ pacote:p.PACOTE||"", fonte:p.FONTE||"", items:cache[p.URL_RSS].slice(0,qtd) });
   }
-  if (out.some(p => p.items.length)) S.noticias = out;
+  if(out.some(p=>p.items.length)) S.noticias = out;
 }
 
-/* ----- Clima ----- */
-async function updClima() {
-  const u = "https://api.open-meteo.com/v1/forecast?latitude=" + CLIMA_LOCAL.lat +
-    "&longitude=" + CLIMA_LOCAL.lon +
-    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day" +
-    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+async function updClima(){
+  const u = "https://api.open-meteo.com/v1/forecast?latitude="+CLIMA_LOCAL.lat+"&longitude="+CLIMA_LOCAL.lon+
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"+
     "&timezone=America%2FSao_Paulo&forecast_days=4";
   S.clima = JSON.parse(await fetchText(u));
 }
 
-/* ----- Mercado ----- */
-async function updMercado() {
-  const j = JSON.parse(await fetchText(
-    "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL"
-  ));
-  S.mercado = { usd: j.USDBRL, eur: j.EURBRL, btc: j.BTCBRL, at: new Date() };
+async function updMercado(){
+  const j = JSON.parse(await fetchText("https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL"));
+  S.mercado = { usd:j.USDBRL, eur:j.EURBRL, btc:j.BTCBRL, at:new Date() };
 }
 
-/* ----- Mídia do Drive ----- */
-function tipoMidia(m) {
-  m = String(m || "");
-  if (/^image\/(jpeg|png|webp|gif|bmp)/.test(m)) return "foto";
-  if (/^video\/(mp4|webm|ogg|3gpp)/.test(m)) return "video";
-  if (m === "application/vnd.google-apps.presentation") return "slides";
-  if (/presentationml|ms-powerpoint|application\/pdf/.test(m)) return "doc";
+function tipoMidia(m){
+  m = String(m||"");
+  if(/^image\/(jpeg|png|webp|gif|bmp)/.test(m)) return "foto";
+  if(/^video\/(mp4|webm|ogg|3gpp)/.test(m)) return "video";
+  if(m==="application/vnd.google-apps.presentation") return "slides";
+  if(/presentationml|ms-powerpoint|application\/pdf/.test(m)) return "doc";
   return null;
 }
 
-async function updMidia() {
-  if (!DRIVE_API_KEY || DRIVE_API_KEY.includes("COLE_A_CHAVE")) {
-    console.warn("Chave do Drive não configurada.");
-    return;
-  }
-  let files = [], token = "";
-  do {
-    const u = "https://www.googleapis.com/drive/v3/files?q=" +
-      encodeURIComponent("'" + DRIVE_PASTA_ID + "' in parents and trashed=false") +
-      "&fields=" + encodeURIComponent("nextPageToken,files(id,name,mimeType)") +
-      "&orderBy=name&pageSize=200&key=" + DRIVE_API_KEY +
-      (token ? "&pageToken=" + token : "");
-    const j = JSON.parse(await fetchText(u, 20000));
-    files = files.concat(j.files || []);
-    token = j.nextPageToken || "";
-  } while (token);
-  S.midia = files.filter(f => tipoMidia(f.mimeType));
+async function updMidia(){
+  if(!DRIVE_API_KEY || DRIVE_API_KEY.includes("COLE")){ console.warn("Chave do Drive não configurada."); return; }
+  let files=[], token="";
+  do{
+    const u = "https://www.googleapis.com/drive/v3/files?q="+encodeURIComponent("'"+DRIVE_PASTA_ID+"' in parents and trashed=false")+
+      "&fields="+encodeURIComponent("nextPageToken,files(id,name,mimeType)")+
+      "&orderBy=name&pageSize=200&key="+DRIVE_API_KEY+(token?"&pageToken="+token:"");
+    const j = JSON.parse(await fetchText(u,20000));
+    files = files.concat(j.files||[]); token = j.nextPageToken||"";
+  }while(token);
+  S.midia = files.filter(f=>tipoMidia(f.mimeType));
 }
 
-/* =====================================================
-   RODAPÉ
-   ===================================================== */
+/* ===== RODAPÉ ===== */
 let ultimoRodape = null;
-function renderRodape() {
-  const itens = S.rodape.filter(r => isYes(r.ATIVO) && r.TEXTO);
-  const unit = itens.map(r =>
-    '<span class="ft-item">' +
-    (r.ROTULO ? "<b>" + esc(r.ROTULO) + "</b>" : "") +
-    esc(r.TEXTO) +
-    "</span>"
-  ).join("");
-  if (unit === ultimoRodape) return;
+function renderRodape(){
+  const itens = S.rodape.filter(r=>isYes(r.ATIVO)&&r.TEXTO);
+  const unit = itens.map(r=>'<span class="ft-item">'+(r.ROTULO?"<b>"+esc(r.ROTULO)+"</b>":"")+esc(r.TEXTO)+"</span>").join("");
+  if(unit===ultimoRodape) return;
   ultimoRodape = unit;
-  const track = $("#tickerTrack");
-  const box = $("#ticker");
+  const track = $("#tickerTrack"), box = $("#ticker");
   track.style.animation = "none";
-  if (!unit) {
-    track.innerHTML = "";
-    return;
-  }
-  track.innerHTML = '<div class="grp">' + unit + "</div>";
-  const uw = track.firstChild.scrollWidth || 1;
-  const n = Math.max(1, Math.ceil(box.clientWidth / uw));
+  if(!unit){ track.innerHTML=""; return; }
+  track.innerHTML = '<div class="grp">'+unit+"</div>";
+  const uw = track.firstChild.scrollWidth||1;
+  const n = Math.max(1, Math.ceil(box.clientWidth/uw));
   const grp = unit.repeat(n);
-  track.innerHTML = '<div class="grp">' + grp + '</div><div class="grp">' + grp + "</div>";
+  track.innerHTML = '<div class="grp">'+grp+'</div><div class="grp">'+grp+"</div>";
   const gw = track.firstChild.scrollWidth;
   void track.offsetWidth;
   track.style.animation = "";
-  track.style.animationDuration = Math.max(10, gw / 90) + "s";
+  track.style.animationDuration = Math.max(10, gw/90)+"s";
 }
 
-/* =====================================================
-   RELÓGIO
-   ===================================================== */
-function relogio() {
+/* ===== RELÓGIO ===== */
+function relogio(){
   const d = new Date();
-  $("#hora").textContent = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  $("#data").textContent = cap(d.toLocaleDateString("pt-BR", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric"
-  }));
+  $("#hora").textContent = d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  $("#data").textContent = cap(d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
 }
 
-/* =====================================================
-   CENAS
-   ===================================================== */
-function avisosAtivos() {
-  const h = new Date();
-  h.setHours(0, 0, 0, 0);
-  return S.avisos
-    .filter(a => isYes(a.ATIVO) && (a.TITULO || a.TEXTO))
-    .filter(a => {
-      const i = parseData(a.INICIO);
-      const f = parseData(a.FIM);
-      if (i && h < i) return false;
-      if (f && h > f) return false;
-      return true;
-    });
+/* ===== CENAS ===== */
+function avisosAtivos(){
+  const h = new Date(); h.setHours(0,0,0,0);
+  return S.avisos.filter(a=>isYes(a.ATIVO)&&(a.TITULO||a.TEXTO)).filter(a=>{
+    const i=parseData(a.INICIO), f=parseData(a.FIM);
+    if(i && h<i) return false;
+    if(f && h>f) return false;
+    return true;
+  });
 }
 
-function cenaAviso(a, alta) {
-  const texto = a.TEXTO || "";
+function cenaAviso(a, alta){
+  const texto = a.TEXTO||"";
   const n = texto.length;
-  const fs = n <= 80 ? 4.2 : n <= 160 ? 3.4 : n <= 300 ? 2.7 : 2.1;
+  const fs = n<=80?4.2:n<=160?3.4:n<=300?2.7:2.1;
   const tipo = norm(a.TIPO);
-  const cls = (alta ? "alta " : "") +
-    (tipo === "URGENTE" ? "tipo-urgente" : tipo === "INFO" ? "tipo-info" : "");
-  const label = alta ? "Aviso importante" : (a.TIPO || "Aviso");
-  const dur = (alta ? cn("TEMPO_AVISO_IMPORTANTE_SEG", 25) : cn("TEMPO_AVISO_NORMAL_SEG", 15)) * 1000;
+  const cls = (alta?"alta ":"")+(tipo==="URGENTE"?"tipo-urgente":tipo==="INFO"?"tipo-info":"");
+  const label = alta ? "Aviso importante" : (a.TIPO||"Aviso");
+  const dur = (alta ? cn("TEMPO_AVISO_IMPORTANTE_SEG",25) : cn("TEMPO_AVISO_NORMAL_SEG",15))*1000;
   return {
     dur,
-    html: '<div class="aviso ' + cls + '">' +
-      '<div class="aviso-tag">' + esc(label) + "</div>" +
-      (a.TITULO ? "<h1>" + esc(a.TITULO) + "</h1>" : "") +
-      '<p style="font-size:' + fs + 'rem">' + esc(texto) + "</p></div>"
+    html: '<div class="aviso '+cls+'"><div class="aviso-tag">'+esc(label)+"</div>"+
+      (a.TITULO?"<h1>"+esc(a.TITULO)+"</h1>":"")+
+      '<p style="font-size:'+fs+'rem">'+esc(texto)+"</p></div>"
   };
 }
 
 const WMO = c => {
-  if (c === 0) return ["☀️", "Céu limpo"];
-  if (c === 1) return ["🌤️", "Predominantemente limpo"];
-  if (c === 2) return ["⛅", "Parcialmente nublado"];
-  if (c === 3) return ["☁️", "Nublado"];
-  if (c === 45 || c === 48) return ["🌫️", "Neblina"];
-  if (c >= 51 && c <= 57) return ["🌦️", "Garoa"];
-  if (c >= 61 && c <= 67) return ["🌧️", "Chuva"];
-  if (c >= 71 && c <= 77) return ["❄️", "Neve"];
-  if (c >= 80 && c <= 82) return ["🌧️", "Pancadas de chuva"];
-  if (c >= 95) return ["⛈️", "Tempestade"];
-  return ["🌡️", "—"];
+  if(c===0) return ["☀️","Céu limpo"];
+  if(c===1) return ["🌤️","Predominantemente limpo"];
+  if(c===2) return ["⛅","Parcialmente nublado"];
+  if(c===3) return ["☁️","Nublado"];
+  if(c===45||c===48) return ["🌫️","Neblina"];
+  if(c>=51&&c<=57) return ["🌦️","Garoa"];
+  if(c>=61&&c<=67) return ["🌧️","Chuva"];
+  if(c>=71&&c<=77) return ["❄️","Neve"];
+  if(c>=80&&c<=82) return ["🌧️","Pancadas de chuva"];
+  if(c>=95) return ["⛈️","Tempestade"];
+  return ["🌡️","—"];
 };
 
-function cenaClima() {
-  const c = S.clima.current;
-  const d = S.clima.daily;
-  const [em, desc] = WMO(c.weather_code);
-  const dias = [1, 2, 3].filter(i => d.time[i]).map(i => {
+function cenaClima(){
+  const c = S.clima.current, d = S.clima.daily;
+  const [em,desc] = WMO(c.weather_code);
+  const dias = [1,2,3].filter(i=>d.time[i]).map(i=>{
     const [e] = WMO(d.weather_code[i]);
-    const nome = new Date(d.time[i] + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long" });
-    return '<div class="dia">' +
-      '<div class="nome">' + esc(nome) + '</div>' +
-      '<div class="emoji">' + e + '</div>' +
-      '<div class="mm">' + Math.round(d.temperature_2m_min[i]) + "° / " + Math.round(d.temperature_2m_max[i]) + '°</div>' +
-      '<div class="chuva">Chuva: ' + (d.precipitation_probability_max[i] ?? 0) + "%</div></div>";
+    const nome = new Date(d.time[i]+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long"});
+    return '<div class="dia"><div class="nome">'+esc(nome)+'</div><div class="emoji">'+e+'</div><div class="mm">'+
+      Math.round(d.temperature_2m_min[i])+"° / "+Math.round(d.temperature_2m_max[i])+'°</div><div class="chuva">Chuva: '+
+      (d.precipitation_probability_max[i]??0)+"%</div></div>";
   }).join("");
   return {
-    dur: cn("TEMPO_INDICES_SEG", 8) * 1000,
-    html: '<div class="titulo-cena">Previsão do tempo · ' + esc(CLIMA_LOCAL.nome) + "</div>" +
-      '<div class="clima-main"><div class="clima-agora">' +
-      '<div class="emoji">' + em + '</div><div>' +
-      '<div class="temp">' + Math.round(c.temperature_2m) + '°</div>' +
-      '<div class="desc">' + esc(desc) + "</div></div></div>" +
-      '<div class="clima-det">' +
-      "<div>Sensação<b>" + Math.round(c.apparent_temperature) + "°</b></div>" +
-      "<div>Umidade<b>" + Math.round(c.relative_humidity_2m) + "%</b></div>" +
-      "<div>Vento<b>" + Math.round(c.wind_speed_10m) + " km/h</b></div>" +
-      "<div>Hoje<b>" + Math.round(d.temperature_2m_min[0]) + "° / " + Math.round(d.temperature_2m_max[0]) + "°</b></div>" +
-      "</div></div>" +
-      '<div class="clima-dias">' + dias + "</div>"
+    dur: cn("TEMPO_INDICES_SEG",8)*1000,
+    html: '<div class="titulo-cena">Previsão do tempo · '+esc(CLIMA_LOCAL.nome)+"</div>"+
+      '<div class="clima-main"><div class="clima-agora"><div class="emoji">'+em+'</div><div><div class="temp">'+
+      Math.round(c.temperature_2m)+'°</div><div class="desc">'+esc(desc)+"</div></div></div>"+
+      '<div class="clima-det"><div>Sensação<b>'+Math.round(c.apparent_temperature)+"°</b></div>"+
+      "<div>Umidade<b>"+Math.round(c.relative_humidity_2m)+"%</b></div>"+
+      "<div>Vento<b>"+Math.round(c.wind_speed_10m)+" km/h</b></div>"+
+      "<div>Hoje<b>"+Math.round(d.temperature_2m_min[0])+"° / "+Math.round(d.temperature_2m_max[0])+"°</b></div></div></div>"+
+      '<div class="clima-dias">'+dias+"</div>"
   };
 }
 
-function cenaMercado() {
+function cenaMercado(){
   const m = S.mercado;
-  const brl = (v, dec) => new Intl.NumberFormat("pt-BR", {
-    style: "currency", currency: "BRL",
-    minimumFractionDigits: dec, maximumFractionDigits: dec
-  }).format(v);
-
-  const card = (nome, o, dec) => {
-    if (!o) return "";
+  const brl = (v,dec) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v);
+  const card = (nome,o,dec) => {
+    if(!o) return "";
     const pct = parseFloat(o.pctChange);
-    const cls = pct >= 0 ? "up" : "down";
-    return '<div class="moeda">' +
-      '<div class="nome">' + nome + '</div>' +
-      '<div class="valor">' + brl(parseFloat(o.bid), dec) + '</div>' +
-      '<div class="var ' + cls + '">' + (pct >= 0 ? "▲ " : "▼ ") +
-      Math.abs(pct).toFixed(2).replace(".", ",") + "%</div></div>";
+    const cls = pct>=0 ? "up" : "down";
+    return '<div class="moeda"><div class="nome">'+nome+'</div><div class="valor">'+brl(parseFloat(o.bid),dec)+
+      '</div><div class="var '+cls+'">'+(pct>=0?"▲ ":"▼ ")+Math.abs(pct).toFixed(2).replace(".",",")+"%</div></div>";
   };
-
   return {
-    dur: cn("TEMPO_INDICES_SEG", 8) * 1000,
-    html: '<div class="titulo-cena">Mercado financeiro</div>' +
-      '<div class="mercado-grid">' +
-      card("Dólar", m.usd, 2) +
-      card("Euro", m.eur, 2) +
-      card("Bitcoin", m.btc, 0) +
-      "</div>" +
-      '<div class="rodinha">Atualizado às ' +
-      m.at.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
-      "</div>"
+    dur: cn("TEMPO_INDICES_SEG",8)*1000,
+    html: '<div class="titulo-cena">Mercado financeiro</div><div class="mercado-grid">'+
+      card("Dólar",m.usd,2)+card("Euro",m.eur,2)+card("Bitcoin",m.btc,0)+"</div>"+
+      '<div class="rodinha">Atualizado às '+m.at.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+"</div>"
   };
 }
 
-function parseDataNoticia(s) {
-  s = String(s || "");
-  if (/^\d{4}-\d\d-\d\d \d\d:\d\d/.test(s)) return new Date(s.replace(" ", "T") + "Z");
+function parseDataNoticia(s){
+  s = String(s||"");
+  if(/^\d{4}-\d\d-\d\d \d\d:\d\d/.test(s)) return new Date(s.replace(" ","T")+"Z");
   return new Date(s);
 }
-
-function haQuanto(s) {
+function haQuanto(s){
   const d = parseDataNoticia(s);
-  if (!d || isNaN(d)) return "";
-  const min = Math.round((Date.now() - d) / 60000);
-  if (min < 0) return "";
-  if (min < 60) return "há " + Math.max(min, 1) + " min";
-  const h = Math.floor(min / 60);
-  if (h < 24) return "há " + h + " h";
-  const dd = Math.floor(h / 24);
-  return "há " + dd + (dd === 1 ? " dia" : " dias");
+  if(!d || isNaN(d)) return "";
+  const min = Math.round((Date.now()-d)/60000);
+  if(min<0) return "";
+  if(min<60) return "há "+Math.max(min,1)+" min";
+  const h = Math.floor(min/60);
+  if(h<24) return "há "+h+" h";
+  const dd = Math.floor(h/24);
+  return "há "+dd+(dd===1?" dia":" dias");
 }
 
-function cenasNoticias() {
-  const listas = S.noticias.map(p =>
-    p.items.map(it => ({ ...it, pacote: p.pacote, fonte: p.fonte }))
-  );
-  const vistos = new Set();
-  const out = [];
-  let i = 0, mais = true;
-  while (mais) {
-    mais = false;
-    for (const l of listas) {
-      if (i < l.length) {
-        mais = true;
-        const it = l[i];
-        const k = norm(it.titulo);
-        if (it.titulo && !vistos.has(k)) {
-          vistos.add(k);
-          out.push(it);
-        }
+function cenasNoticias(){
+  const listas = S.noticias.map(p => p.items.map(it => ({...it, pacote:p.pacote, fonte:p.fonte})));
+  const vistos = new Set(), out = [];
+  let i=0, mais=true;
+  while(mais){
+    mais=false;
+    for(const l of listas){
+      if(i < l.length){
+        mais=true;
+        const it=l[i], k=norm(it.titulo);
+        if(it.titulo && !vistos.has(k)){ vistos.add(k); out.push(it); }
       }
     }
     i++;
   }
-  return out.map(it => {
-    const tag = [it.pacote, it.fonte].filter(Boolean).join(" · ");
+  return out.map(it=>{
+    const tag = [it.pacote,it.fonte].filter(Boolean).join(" · ");
     const quando = haQuanto(it.data);
     return {
-      dur: cn("TEMPO_NOTICIAS_SEG", 12) * 1000,
-      html: '<div class="noticia">' +
-        (it.img ? '<div class="noticia-img"><img src="' + esc(it.img) + '" alt=""></div>' : "") +
-        "<div>" +
-        (tag ? '<span class="noticia-tag">' + esc(tag) + "</span>" : "") +
-        "<h1>" + esc(cortar(it.titulo, 160)) + "</h1>" +
-        (it.desc ? "<p>" + esc(cortar(it.desc, 260)) + "</p>" : "") +
-        (quando ? '<div class="quando">' + quando + "</div>" : "") +
-        "</div></div>",
-      mount: el => {
+      dur: cn("TEMPO_NOTICIAS_SEG",12)*1000,
+      html: '<div class="noticia">'+
+        (it.img?'<div class="noticia-img"><img src="'+esc(it.img)+'" alt=""></div>':"")+
+        "<div>"+(tag?'<span class="noticia-tag">'+esc(tag)+"</span>":"")+
+        "<h1>"+esc(cortar(it.titulo,160))+"</h1>"+
+        (it.desc?"<p>"+esc(cortar(it.desc,260))+"</p>":"")+
+        (quando?'<div class="quando">'+quando+"</div>":"")+"</div></div>",
+      mount: el=>{
         const img = el.querySelector(".noticia-img img");
-        if (img) {
-          img.onerror = () => {
-            img.parentNode.remove();
-            el.querySelector(".noticia").style.gridTemplateColumns = "1fr";
-          };
-        }
+        if(img) img.onerror = ()=>{ img.parentNode.remove(); el.querySelector(".noticia").style.gridTemplateColumns="1fr"; };
       }
     };
   });
 }
 
-function cenasAniv() {
+function cenasAniv(){
   const hoje = new Date();
-  const mes = hoje.getMonth() + 1;
-  const lista = S.aniv
-    .filter(r => isYes(r.ATIVO) && r.NOME)
-    .map(r => ({ ...r, d: parseData(r.DATA_NASCIMENTO) }))
-    .filter(r => r.d && r.d.getMonth() + 1 === mes)
-    .sort((a, b) => a.d.getDate() - b.d.getDate());
-
-  if (!lista.length) return [];
-
-  const nomeMes = hoje.toLocaleDateString("pt-BR", { month: "long" });
-  const porPag = 8;
-  const paginas = Math.ceil(lista.length / porPag);
-  const cenas = [];
-
-  for (let p = 0; p < paginas; p++) {
-    const cards = lista.slice(p * porPag, (p + 1) * porPag).map(r => {
-      const ehHoje = r.d.getDate() === hoje.getDate();
-      return '<div class="aniv' + (ehHoje ? " hoje" : "") + '">' +
-        '<div class="dia-num">' + r.d.getDate() + '</div>' +
-        '<div><div class="nome">' + esc(r.NOME) + '</div>' +
-        '<div class="setor">' + esc(r.SETOR || "") + "</div></div>" +
-        (ehHoje ? '<div class="hoje-tag">HOJE</div>' : "") +
-        "</div>";
+  const mes = hoje.getMonth()+1;
+  const lista = S.aniv.filter(r=>isYes(r.ATIVO)&&r.NOME)
+    .map(r=>({...r, d:parseData(r.DATA_NASCIMENTO)}))
+    .filter(r=>r.d && r.d.getMonth()+1===mes)
+    .sort((a,b)=>a.d.getDate()-b.d.getDate());
+  if(!lista.length) return [];
+  const nomeMes = hoje.toLocaleDateString("pt-BR",{month:"long"});
+  const porPag=8, paginas=Math.ceil(lista.length/porPag), cenas=[];
+  for(let p=0;p<paginas;p++){
+    const cards = lista.slice(p*porPag,(p+1)*porPag).map(r=>{
+      const ehHoje = r.d.getDate()===hoje.getDate();
+      return '<div class="aniv'+(ehHoje?" hoje":"")+'"><div class="dia-num">'+r.d.getDate()+'</div><div><div class="nome">'+
+        esc(r.NOME)+'</div><div class="setor">'+esc(r.SETOR||"")+"</div></div>"+
+        (ehHoje?'<div class="hoje-tag">HOJE</div>':"")+"</div>";
     }).join("");
-
     cenas.push({
-      dur: cn("TEMPO_ANIVERSARIANTES_SEG", 15) * 1000,
-      html: '<div class="titulo-cena">Aniversariantes de ' + esc(nomeMes) + '</div>' +
-        '<div class="aniv-grid">' + cards + "</div>" +
-        (paginas > 1 ? '<div class="pagina">' + (p + 1) + " / " + paginas + "</div>" : "")
+      dur: cn("TEMPO_ANIVERSARIANTES_SEG",15)*1000,
+      html: '<div class="titulo-cena">Aniversariantes de '+esc(nomeMes)+'</div><div class="aniv-grid">'+cards+"</div>"+
+        (paginas>1?'<div class="pagina">'+(p+1)+" / "+paginas+"</div>":"")
     });
   }
   return cenas;
 }
 
-function mesConfere(ref, hoje) {
-  const m = String(ref || "").match(/(\d{1,2})\s*[\/\-]\s*(\d{4})/);
-  if (!m) return true;
-  return +m[1] === hoje.getMonth() + 1 && +m[2] === hoje.getFullYear();
+function mesConfere(ref, hoje){
+  const m = String(ref||"").match(/(\d{1,2})\s*[\/\-]\s*(\d{4})/);
+  if(!m) return true;
+  return +m[1]===hoje.getMonth()+1 && +m[2]===hoje.getFullYear();
 }
 
-function cenaFunc() {
+function cenaFunc(){
   const hoje = new Date();
-  const r = S.func.find(x => isYes(x.ATIVO) && x.NOME && mesConfere(x.MES_REFERENCIA, hoje));
-  if (!r) return null;
-
+  const r = S.func.find(x=>isYes(x.ATIVO)&&x.NOME&&mesConfere(x.MES_REFERENCIA,hoje));
+  if(!r) return null;
   const id = driveId(r.FOTO_LINK);
-  const foto = id
-    ? "https://lh3.googleusercontent.com/d/" + id + "=w900"
-    : (/^https?:\/\//i.test(r.FOTO_LINK || "") ? r.FOTO_LINK : "");
-
-  const ini = r.NOME.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join("").toUpperCase();
-  const mesTxt = cap(hoje.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }));
-
+  const foto = id ? "https://lh3.googleusercontent.com/d/"+id+"=w900" : (/^https?:\/\//i.test(r.FOTO_LINK||"")?r.FOTO_LINK:"");
+  const ini = r.NOME.split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0]).join("").toUpperCase();
+  const mesTxt = cap(hoje.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}));
   return {
-    dur: cn("TEMPO_FUNC_MES_SEG", 20) * 1000,
-    html: '<div class="titulo-cena">Funcionário do mês</div>' +
-      '<div class="func"><div class="func-foto">' +
-      (foto ? '<img src="' + esc(foto) + '" alt="">' : '<div class="ph">' + esc(ini) + "</div>") +
-      '</div><div class="func-txt">' +
-      '<div class="mes">' + esc(mesTxt) + "</div>" +
-      "<h1>" + esc(r.NOME) + "</h1>" +
-      '<div class="cargo">' + esc([r.CARGO, r.SETOR].filter(Boolean).join(" · ")) + "</div>" +
-      (r.MOTIVO ? '<div class="motivo">' + esc(r.MOTIVO) + "</div>" : "") +
-      "</div></div>",
-    mount: el => {
+    dur: cn("TEMPO_FUNC_MES_SEG",20)*1000,
+    html: '<div class="titulo-cena">Funcionário do mês</div><div class="func"><div class="func-foto">'+
+      (foto?'<img src="'+esc(foto)+'" alt="">':'<div class="ph">'+esc(ini)+"</div>")+'</div><div class="func-txt">'+
+      '<div class="mes">'+esc(mesTxt)+"</div><h1>"+esc(r.NOME)+"</h1>"+
+      '<div class="cargo">'+esc([r.CARGO,r.SETOR].filter(Boolean).join(" · "))+"</div>"+
+      (r.MOTIVO?'<div class="motivo">'+esc(r.MOTIVO)+"</div>":"")+"</div></div>",
+    mount: el=>{
       const img = el.querySelector(".func-foto img");
-      if (img) {
-        img.onerror = () => {
-          img.parentNode.innerHTML = '<div class="ph">' + esc(ini) + "</div>";
-        };
-      }
+      if(img) img.onerror = ()=>{ img.parentNode.innerHTML = '<div class="ph">'+esc(ini)+"</div>"; };
     }
   };
 }
 
-/* ----- Mídia ----- */
-function cenaFoto(f) {
-  const dur = cn("TEMPO_FOTO_SEG", 10) * 1000;
-  const u1 = "https://lh3.googleusercontent.com/d/" + f.id + "=w1920";
-  const u2 = "https://drive.google.com/thumbnail?id=" + f.id + "&sz=w1920";
+function cenaFoto(f){
+  const dur = cn("TEMPO_FOTO_SEG",10)*1000;
+  const u1 = "https://lh3.googleusercontent.com/d/"+f.id+"=w1920";
+  const u2 = "https://drive.google.com/thumbnail?id="+f.id+"&sz=w1920";
   return {
-    cls: "midia",
-    html: '<div class="bg"></div><img class="fg" alt="">',
-    run: el => new Promise(res => {
-      const img = el.querySelector("img");
-      const bg = el.querySelector(".bg");
-      let ok = false, fb = false;
-      img.onload = () => {
-        if (ok) return;
-        ok = true;
-        bg.style.backgroundImage = 'url("' + img.src + '")';
-        setTimeout(res, dur);
-      };
-      img.onerror = () => {
-        if (!fb) { fb = true; img.src = u2; }
-        else res();
-      };
+    cls:"midia", html:'<div class="bg"></div><img class="fg" alt="">',
+    run: el => new Promise(res=>{
+      const img=el.querySelector("img"), bg=el.querySelector(".bg");
+      let ok=false, fb=false;
+      img.onload = ()=>{ if(ok) return; ok=true; bg.style.backgroundImage='url("'+img.src+'")'; setTimeout(res,dur); };
+      img.onerror = ()=>{ if(!fb){ fb=true; img.src=u2; } else res(); };
       img.src = u1;
-      setTimeout(() => { if (!ok) res(); }, 20000);
+      setTimeout(()=>{ if(!ok) res(); },20000);
     })
   };
 }
 
-function cenaVideo(f) {
+function cenaVideo(f){
   return {
-    cls: "midia",
-    max: 900000,
-    html: '<video playsinline preload="auto"></video>',
-    run: async el => {
+    cls:"midia", max:900000, html:'<video playsinline preload="auto"></video>',
+    run: async el=>{
       radioSuspender(true);
-      try {
-        await new Promise(res => {
+      try{
+        await new Promise(res=>{
           const v = el.querySelector("video");
-          let fim = false, tocou = false, fb = false;
-          const sair = () => { if (!fim) { fim = true; res(); } };
-          const fallback = () => {
-            if (fb || fim) return;
-            fb = true;
-            el.innerHTML = '<iframe src="https://drive.google.com/file/d/' + f.id +
-              '/preview" allow="autoplay"></iframe>';
-            setTimeout(sair, 45000);
+          let fim=false, tocou=false, fb=false;
+          const sair = ()=>{ if(!fim){ fim=true; res(); } };
+          const fallback = ()=>{
+            if(fb||fim) return; fb=true;
+            el.innerHTML = '<iframe src="https://drive.google.com/file/d/'+f.id+'/preview" allow="autoplay"></iframe>';
+            setTimeout(sair,45000);
           };
-          v.onplaying = () => { tocou = true; };
-          v.onended = sair;
-          v.onerror = fallback;
-          v.src = "https://www.googleapis.com/drive/v3/files/" + f.id +
-            "?alt=media&key=" + DRIVE_API_KEY;
+          v.onplaying = ()=>{ tocou=true; };
+          v.onended = sair; v.onerror = fallback;
+          v.src = "https://www.googleapis.com/drive/v3/files/"+f.id+"?alt=media&key="+DRIVE_API_KEY;
           const p = v.play();
-          if (p && p.catch) {
-            p.catch(() => {
-              v.muted = true;
-              const q = v.play();
-              if (q && q.catch) q.catch(() => {});
-            });
-          }
-          setTimeout(() => { if (!tocou) fallback(); }, 25000);
+          if(p&&p.catch) p.catch(()=>{ v.muted=true; const q=v.play(); if(q&&q.catch) q.catch(()=>{}); });
+          setTimeout(()=>{ if(!tocou) fallback(); },25000);
         });
-      } finally {
-        radioSuspender(false);
-      }
+      } finally { radioSuspender(false); }
     }
   };
 }
 
-function cenaSlides(f, t) {
-  const url = t === "slides"
-    ? "https://docs.google.com/presentation/d/" + f.id +
-      "/embed?start=true&loop=true&delayms=5000&rm=minimal"
-    : "https://drive.google.com/file/d/" + f.id + "/preview";
-  return {
-    cls: "midia",
-    dur: cn("TEMPO_SLIDES_SEG", 60) * 1000,
-    html: '<iframe src="' + esc(url) + '" allow="autoplay; fullscreen"></iframe>'
-  };
+function cenaSlides(f,t){
+  const url = t==="slides"
+    ? "https://docs.google.com/presentation/d/"+f.id+"/embed?start=true&loop=true&delayms=5000&rm=minimal"
+    : "https://drive.google.com/file/d/"+f.id+"/preview";
+  return { cls:"midia", dur:cn("TEMPO_SLIDES_SEG",60)*1000, html:'<iframe src="'+esc(url)+'" allow="autoplay; fullscreen"></iframe>' };
 }
 
-function cenasMidia() {
-  return S.midia.map(f => {
+function cenasMidia(){
+  return S.midia.map(f=>{
     const t = tipoMidia(f.mimeType);
-    return t === "foto" ? cenaFoto(f) :
-           t === "video" ? cenaVideo(f) :
-           cenaSlides(f, t);
+    return t==="foto" ? cenaFoto(f) : t==="video" ? cenaVideo(f) : cenaSlides(f,t);
   });
 }
 
 const cenaVazia = () => ({
-  dur: 6000,
-  html: '<div class="centro">' +
-    '<img src="Logo.jpg" alt="" onerror="this.style.display=\'none\'">' +
-    '<div>Juanil Transportes e Locações</div></div>'
+  dur:6000,
+  html: '<div class="centro"><img src="Logo.jpg" alt="" onerror="this.style.display=\'none\'"><div>Juanil Transportes e Locações</div></div>'
 });
 
-/* =====================================================
-   PLAYLIST E MOTOR DE CENAS
-   ===================================================== */
-function montarPlaylist() {
-  const base = [];
-  const normais = [];
-  const altas = [];
-
-  if (cb("MOSTRAR_AVISOS", true)) {
-    avisosAtivos().forEach(a =>
-      (norm(a.PRIORIDADE) === "ALTA" ? altas : normais).push(a)
-    );
+/* ===== PLAYLIST E MOTOR ===== */
+function montarPlaylist(){
+  const base=[], normais=[], altas=[];
+  if(cb("MOSTRAR_AVISOS",true)){
+    avisosAtivos().forEach(a => (norm(a.PRIORIDADE)==="ALTA"?altas:normais).push(a));
   }
-
-  normais.forEach(a => base.push(cenaAviso(a, false)));
-
-  if (cb("MOSTRAR_INDICES", true)) {
-    if (S.clima) base.push(cenaClima());
-    if (S.mercado) base.push(cenaMercado());
+  normais.forEach(a => base.push(cenaAviso(a,false)));
+  if(cb("MOSTRAR_INDICES",true)){
+    if(S.clima) base.push(cenaClima());
+    if(S.mercado) base.push(cenaMercado());
   }
+  if(cb("MOSTRAR_NOTICIAS",true)) cenasNoticias().forEach(c=>base.push(c));
+  if(cb("MOSTRAR_ANIVERSARIANTES",true)) cenasAniv().forEach(c=>base.push(c));
+  if(cb("MOSTRAR_FUNC_MES",true)){ const c=cenaFunc(); if(c) base.push(c); }
+  if(cb("MOSTRAR_MIDIA_DRIVE",true)) cenasMidia().forEach(c=>base.push(c));
 
-  if (cb("MOSTRAR_NOTICIAS", true)) {
-    cenasNoticias().forEach(c => base.push(c));
-  }
-
-  if (cb("MOSTRAR_ANIVERSARIANTES", true)) {
-    cenasAniv().forEach(c => base.push(c));
-  }
-
-  if (cb("MOSTRAR_FUNC_MES", true)) {
-    const c = cenaFunc();
-    if (c) base.push(c);
-  }
-
-  if (cb("MOSTRAR_MIDIA_DRIVE", true)) {
-    cenasMidia().forEach(c => base.push(c));
-  }
-
-  if (!altas.length) return base;
-  if (!base.length) return altas.map(a => cenaAviso(a, true));
-
-  const n = Math.max(1, Math.round(cn("AVISO_IMPORTANTE_REPETE_A_CADA", 3)));
-  const out = [];
-  base.forEach((sc, i) => {
-    if (i % n === 0) {
-      out.push(cenaAviso(altas[altaPtr++ % altas.length], true));
-    }
+  if(!altas.length) return base;
+  if(!base.length) return altas.map(a=>cenaAviso(a,true));
+  const n = Math.max(1, Math.round(cn("AVISO_IMPORTANTE_REPETE_A_CADA",3)));
+  const out=[];
+  base.forEach((sc,i)=>{
+    if(i%n===0) out.push(cenaAviso(altas[altaPtr++%altas.length],true));
     out.push(sc);
   });
   return out;
 }
 
 const stage = $("#stage");
-
-function limparCena(el) {
-  el.querySelectorAll("video").forEach(v => {
-    v.onerror = null;
-    v.onended = null;
-    v.pause();
-    v.removeAttribute("src");
-  });
-  el.querySelectorAll("iframe").forEach(f => {
-    f.src = "about:blank";
-  });
+function limparCena(el){
+  el.querySelectorAll("video").forEach(v=>{ v.onerror=null; v.onended=null; v.pause(); v.removeAttribute("src"); });
+  el.querySelectorAll("iframe").forEach(f=>{ f.src="about:blank"; });
 }
 
-async function playScene(sc) {
+async function playScene(sc){
   const old = stage.firstElementChild;
-  if (old) {
-    old.classList.remove("on");
-    await sleep(450);
-    limparCena(old);
-    old.remove();
-  }
+  if(old){ old.classList.remove("on"); await sleep(450); limparCena(old); old.remove(); }
   const el = document.createElement("div");
-  el.className = "scene " + (sc.cls || "");
+  el.className = "scene "+(sc.cls||"");
   el.innerHTML = sc.html;
   stage.appendChild(el);
-  if (sc.mount) sc.mount(el);
+  if(sc.mount) sc.mount(el);
   await sleep(40);
   el.classList.add("on");
-  if (sc.run) {
-    await Promise.race([sc.run(el), sleep(sc.max || 600000)]);
-  } else {
-    await sleep(sc.dur);
-  }
+  if(sc.run) await Promise.race([sc.run(el), sleep(sc.max||600000)]);
+  else await sleep(sc.dur);
 }
 
-async function ciclo() {
-  while (true) {
-    try {
+async function ciclo(){
+  while(true){
+    try{
       const lista = montarPlaylist();
       const v = versionUrgent;
-      if (!lista.length) {
-        await playScene(cenaVazia());
-        continue;
-      }
-      for (const sc of lista) {
-        if (v !== versionUrgent) break;
+      if(!lista.length){ await playScene(cenaVazia()); continue; }
+      for(const sc of lista){
+        if(v !== versionUrgent) break;
         await playScene(sc);
       }
-    } catch (e) {
-      console.error(e);
-      await sleep(3000);
-    }
+    }catch(e){ console.error(e); await sleep(3000); }
   }
 }
 
-/* =====================================================
-   AUTO-ATUALIZAÇÃO DO PRÓPRIO PAINEL
-   ===================================================== */
+/* ===== AUTO-ATUALIZAÇÃO ===== */
 let versaoBase = null;
-async function checarVersao() {
-  try {
-    const t = await fetchText(location.origin + location.pathname + "?v=" + Date.now(), 15000);
+async function checarVersao(){
+  try{
+    const t = await fetchText(location.origin+location.pathname+"?v="+Date.now(),15000);
     const h = hashStr(t);
-    if (versaoBase === null) versaoBase = h;
-    else if (h !== versaoBase) recarregar();
-  } catch (e) {}
+    if(versaoBase===null) versaoBase=h;
+    else if(h!==versaoBase) recarregar();
+  }catch(e){}
 }
 
-function recargaDiaria() {
+function recargaDiaria(){
   const d = new Date();
-  if (d.getHours() !== 4) return;
+  if(d.getHours()!==4) return;
   const hojeStr = d.toDateString();
-  try {
-    if (localStorage.getItem("juanil_reload_dia") === hojeStr) return;
-    localStorage.setItem("juanil_reload_dia", hojeStr);
-  } catch (e) {
-    return;
-  }
+  try{
+    if(localStorage.getItem("juanil_reload_dia")===hojeStr) return;
+    localStorage.setItem("juanil_reload_dia",hojeStr);
+  }catch(e){ return; }
   recarregar();
 }
 
-/* =====================================================
-   INÍCIO
-   ===================================================== */
-const seguro = (fn) => () => {
-  Promise.resolve().then(fn).catch(e => console.warn(e.message));
-};
+/* ===== INÍCIO ===== */
+const seguro = fn => () => { Promise.resolve().then(fn).catch(e=>console.warn(e.message)); };
 
-(async function iniciar() {
-  relogio();
-  setInterval(relogio, 1000);
+(async function iniciar(){
+  relogio(); setInterval(relogio,1000);
 
-  // Aguarda no máximo 20 segundos pelos dados iniciais
   await Promise.race([
-    Promise.allSettled([
-      updControle(),
-      updSheets(),
-      updNoticias(),
-      updClima(),
-      updMercado(),
-      updMidia()
-    ]),
+    Promise.allSettled([updControle(), updSheets(), updNoticias(), updClima(), updMercado(), updMidia()]),
     sleep(20000)
   ]);
 
-  // Atualizações periódicas
-  setInterval(seguro(updControle), 30 * 1000);
-  setInterval(seguro(updSheets), 60 * 1000);
-  setInterval(seguro(updMercado), 3 * 60 * 1000);
-  setInterval(seguro(updNoticias), 10 * 60 * 1000);
-  setInterval(seguro(updMidia), 10 * 60 * 1000);
-  setInterval(seguro(updClima), 15 * 60 * 1000);
-  setInterval(seguro(checarVersao), 5 * 60 * 1000);
-  setInterval(recargaDiaria, 60 * 1000);
+  // Força a rádio logo no início
+  setTimeout(aplicarRadio, 1500);
+  setTimeout(aplicarRadio, 4000);
+  setTimeout(aplicarRadio, 8000);
+
+  setInterval(seguro(updControle), 30*1000);
+  setInterval(seguro(updSheets), 60*1000);
+  setInterval(seguro(updMercado), 3*60*1000);
+  setInterval(seguro(updNoticias), 10*60*1000);
+  setInterval(seguro(updMidia), 10*60*1000);
+  setInterval(seguro(updClima), 15*60*1000);
+  setInterval(seguro(checarVersao), 5*60*1000);
+  setInterval(recargaDiaria, 60*1000);
   checarVersao();
 
-  // Inicia o ciclo de cenas
   ciclo();
 })();
 })();
