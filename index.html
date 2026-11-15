@@ -947,22 +947,3 @@ const seguro = (fn) => () => { Promise.resolve().then(fn).catch(e => console.war
 </body>
 </html>
 ```
-
-## Como instalar
-
-1. No GitHub, em `juanilgeral/painel-tv`, crie o arquivo **`painel-novo.html`** na raiz e cole o código. O `index.html` antigo não é tocado.
-2. Troque `COLE_A_CHAVE_AQUI` pela sua chave direto no editor. **Não cole a chave aqui no chat.**
-3. Confirme que o **`Logo.jpg`** está na mesma pasta.
-4. Aguarde a publicação do Pages e teste em `https://juanilgeral.github.io/painel-tv/painel-novo.html`.
-5. No Fully Kiosk, troque a URL só depois de aprovar o teste. Para voltar ao antigo, restaure a URL anterior.
-
-## Pontos de atenção
-
-- **`RECARREGAR_PAINEL`:** a TV recarrega uma vez quando a célula vira **SIM**. Depois volte para **NAO**, porque a página não escreve na planilha.
-- **Rádio:** liga e desliga por `RADIO` e usa `RADIO_VOLUME`. Pausa sozinha durante vídeos. Se o Fully Kiosk bloquear o som automático, ative o autoplay de mídia nas configurações.
-- **Vídeos:** use **MP4**. Slides funcionam melhor em **Google Slides**, porque PPTX e PDF não avançam sozinhos.
-- **Pacote "Trânsito":** se usar o mesmo RSS do "Rio de Janeiro", o painel não repete a notícia. Troque o link para ter conteúdo próprio.
-- **Mercado:** mostra dólar, euro e bitcoin. O Ibovespa ficou de fora por falta de fonte gratuita confiável direto no navegador.
-
-Depois de publicar, me diga qual cena não ficou como esperado e eu ajusto o arquivo inteiro.
-
