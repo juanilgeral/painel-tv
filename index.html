@@ -80,7 +80,6 @@ function unmuteOnGesture(){
   document.addEventListener('pointerdown',go);
   document.addEventListener('keydown',go);
 }
-
 function startRadio(){
   if(!radioAllowed()){
     if(radioExpired) radioTag('JB FM · tempo configurado encerrado');
@@ -88,17 +87,16 @@ function startRadio(){
     return;
   }
   audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));
+  audio.muted=false;
   if(!audio.src){
     radioTries++;
     audio.src=radioTries>1?RADIO_URL+(RADIO_URL.includes('?')?'&':'?')+'t='+Date.now():RADIO_URL;
     try{audio.load()}catch(e){}
   }
-  audio.muted=true;
   let p;
   try{p=audio.play()}catch(e){p=Promise.reject(e)}
   if(p?.then){
     p.then(()=>{
-      unmuteOnGesture();
       radioTag('♪ JB FM AO VIVO');
     }).catch(err=>{
       console.warn('JB FM:',err.name,err.message);
@@ -108,7 +106,8 @@ function startRadio(){
     });
   }
   buttonState();
-}function applyRadio(){if(radioDrive===false){stopRadio();radioTag('');return}if(radioExpired){stopRadio();radioTag('JB FM · tempo configurado encerrado');return}if(radioAllowed()){audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(audio.paused)startRadio()}buttonState()}
+}
+function applyRadio(){if(radioDrive===false){stopRadio();radioTag('');return}if(radioExpired){stopRadio();radioTag('JB FM · tempo configurado encerrado');return}if(radioAllowed()){audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(audio.paused)startRadio()}buttonState()}
 function checkRadioDeadline(){if(radioDrive!==true||!radioStartedAt||radioMinutes<=0||radioExpired)return;if(Date.now()-radioStartedAt>=radioMinutes*60000){radioExpired=true;saveRadioTimer({on:true,startedAt:radioStartedAt,minutes:radioMinutes});stopRadio();radioTag('JB FM · tempo configurado encerrado')}}
 $('#radioButton').addEventListener('click',()=>{if(radioDrive!==true){radioTag('Ligue RADIO na planilha para permitir a JB FM');return}if(radioExpired){radioTag('JB FM · tempo configurado encerrado; desligue e ligue RADIO na planilha para reiniciar');return}startRadio()});
 audio.addEventListener('playing',()=>{radioTries=0;radioLast=Date.now();radioTag('♪ JB FM AO VIVO');buttonState()});audio.addEventListener('waiting',()=>radioTag('♪ JB FM conectando…'));audio.addEventListener('timeupdate',()=>{if(audio.currentTime!==radioTime){radioTime=audio.currentTime;radioLast=Date.now()}});audio.addEventListener('error',()=>{if(radioAllowed()){radioTag('JB FM tentando reconectar…');clearTimeout(radioTimer);radioTimer=setTimeout(()=>{audio.removeAttribute('src');startRadio()},4000)}});audio.addEventListener('pause',buttonState);
