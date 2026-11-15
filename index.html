@@ -114,7 +114,12 @@ footer{border-top:.15rem solid var(--accent);background:rgba(0,0,0,.35);height:3
 </header>
 
 <main id="stage">
-  <div class="scene on"><div class="centro"><img src="Logo.jpg" alt="" onerror="this.style.display='none'"><div>Carregando painel...</div></div></div>
+  <div class="scene on">
+    <div class="centro">
+      <img src="Logo.jpg" alt="" onerror="this.style.display='none'">
+      <div>Carregando painel...</div>
+    </div>
+  </div>
 </main>
 
 <footer><div id="ticker"><div id="tickerTrack"></div></div></footer>
@@ -232,9 +237,10 @@ const cv = (k,d) => (S.ctrl[k]!==undefined && S.ctrl[k]!=="") ? S.ctrl[k] : d;
 const cn = (k,d) => { const n=parseFloat(String(cv(k,d)).replace(",",".")); return isNaN(n)?d:n; };
 const cb = (k,d) => isYes(cv(k, d?"SIM":"NAO"));
 
-/* ===== RÁDIO (JB FM) ===== */
+/* ===== RÁDIO JB FM ===== */
 const radio = document.createElement("audio");
-radio.preload = "none";
+radio.preload = "auto";
+radio.autoplay = true;
 radio.setAttribute("playsinline","");
 radio.style.display = "none";
 document.body.appendChild(radio);
@@ -298,7 +304,6 @@ function radioTocar(){
   }
 }
 
-// Recarrega o stream do zero (com parâmetro anti-cache nas tentativas)
 function radioReiniciar(){
   radioTentativas++;
   clearTimeout(radioRetryTimer);
@@ -327,7 +332,6 @@ function aplicarRadio(){
     return;
   }
 
-  // Tocando
   if(radio.readyState >= 3 && !radio.paused) tagRadio("♪ JB FM");
 }
 
@@ -367,7 +371,6 @@ radio.addEventListener("error", ()=>{
   radioRetryTimer = setTimeout(radioReiniciar, 4000);
 });
 
-// Qualquer toque tenta ativar o som (necessário se o navegador bloquear autoplay)
 ["click","touchstart","keydown"].forEach(e=>{
   addEventListener(e, ()=>{
     if(radioQuer()){
@@ -377,7 +380,6 @@ radio.addEventListener("error", ()=>{
   }, {passive:true});
 });
 
-// Vigia: reinicia se parou, deu erro ou o áudio travou (sem avançar por 20 s)
 setInterval(()=>{
   if(!radioQuer()) return;
   const travado = !radio.paused && (Date.now() - radioUltimoProgresso > 20000);
@@ -436,7 +438,11 @@ function limpar(html){
   try{ return (new DOMParser().parseFromString(String(html||""),"text/html").body.textContent||"").replace(/\s+/g," ").trim(); }
   catch(e){ return ""; }
 }
-const primeiraImg = h => { const m=String(h||"").match(/<img[^>]+src=["']([^"']+)/i); return m?m[1]:""; };
+
+const primeiraImg = h => {
+  const m=String(h||"").match(/<img[^>]+src=["']([^"']+)/i);
+  return m?m[1]:"";
+};
 
 async function fetchRSS(url){
   try{
@@ -445,18 +451,33 @@ async function fetchRSS(url){
       return j.items.map(it=>{
         const enc = it.enclosure && it.enclosure.link;
         const encImg = enc && /\.(jpe?g|png|webp|gif)/i.test(enc) ? enc : "";
-        return { titulo:it.title||"", desc:limpar(it.description||it.content), img:it.thumbnail||encImg||primeiraImg(it.description||it.content), data:it.pubDate||"" };
+        return {
+          titulo:it.title||"",
+          desc:limpar(it.description||it.content),
+          img:it.thumbnail||encImg||primeiraImg(it.description||it.content),
+          data:it.pubDate||""
+        };
       });
     }
   }catch(e){ console.warn("rss2json falhou", e.message); }
+
   try{
     const xml = await fetchText("https://api.allorigins.win/raw?url="+encodeURIComponent(url),15000);
     const doc = new DOMParser().parseFromString(xml,"text/xml");
     return [...doc.querySelectorAll("item")].map(it=>{
-      const g = t => { const e=it.getElementsByTagName(t)[0]; return e?e.textContent:""; };
-      const mc = it.getElementsByTagNameNS("*","content")[0] || it.getElementsByTagNameNS("*","thumbnail")[0];
+      const g = t => {
+        const e=it.getElementsByTagName(t)[0];
+        return e?e.textContent:"";
+      };
+      const mc = it.getElementsByTagNameNS("*","content")[0] ||
+                 it.getElementsByTagNameNS("*","thumbnail")[0];
       const desc = g("description");
-      return { titulo:g("title"), desc:limpar(desc), img:(mc&&mc.getAttribute("url"))||primeiraImg(desc), data:g("pubDate") };
+      return {
+        titulo:g("title"),
+        desc:limpar(desc),
+        img:(mc&&mc.getAttribute("url"))||primeiraImg(desc),
+        data:g("pubDate")
+      };
     });
   }catch(e){ console.warn("allorigins falhou", e.message); }
   return [];
@@ -464,7 +485,8 @@ async function fetchRSS(url){
 
 async function updNoticias(){
   const cfg = (await loadSheet("NOTICIAS")).filter(r=>isYes(r.ATIVO)&&r.URL_RSS);
-  const cache = {}; const out = [];
+  const cache = {};
+  const out = [];
   for(const p of cfg){
     if(!cache[p.URL_RSS]) cache[p.URL_RSS] = await fetchRSS(p.URL_RSS);
     const qtd = parseInt(p.QTD||p.QUANTIDADE,10)||5;
@@ -496,14 +518,20 @@ function tipoMidia(m){
 }
 
 async function updMidia(){
-  if(!DRIVE_API_KEY || DRIVE_API_KEY.includes("COLE")){ console.warn("Chave do Drive não configurada."); return; }
+  if(!DRIVE_API_KEY || DRIVE_API_KEY.includes("COLE")){
+    console.warn("Chave do Drive não configurada.");
+    return;
+  }
   let files=[], token="";
   do{
-    const u = "https://www.googleapis.com/drive/v3/files?q="+encodeURIComponent("'"+DRIVE_PASTA_ID+"' in parents and trashed=false")+
+    const u = "https://www.googleapis.com/drive/v3/files?q="+
+      encodeURIComponent("'"+DRIVE_PASTA_ID+"' in parents and trashed=false")+
       "&fields="+encodeURIComponent("nextPageToken,files(id,name,mimeType)")+
-      "&orderBy=name&pageSize=200&key="+DRIVE_API_KEY+(token?"&pageToken="+token:"");
+      "&orderBy=name&pageSize=200&key="+DRIVE_API_KEY+
+      (token?"&pageToken="+token:"");
     const j = JSON.parse(await fetchText(u,20000));
-    files = files.concat(j.files||[]); token = j.nextPageToken||"";
+    files = files.concat(j.files||[]);
+    token = j.nextPageToken||"";
   }while(token);
   S.midia = files.filter(f=>tipoMidia(f.mimeType));
 }
@@ -512,7 +540,11 @@ async function updMidia(){
 let ultimoRodape = null;
 function renderRodape(){
   const itens = S.rodape.filter(r=>isYes(r.ATIVO)&&r.TEXTO);
-  const unit = itens.map(r=>'<span class="ft-item">'+(r.ROTULO?"<b>"+esc(r.ROTULO)+"</b>":"")+esc(r.TEXTO)+"</span>").join("");
+  const unit = itens.map(r=>
+    '<span class="ft-item">'+
+    (r.ROTULO?"<b>"+esc(r.ROTULO)+"</b>":"")+
+    esc(r.TEXTO)+"</span>"
+  ).join("");
   if(unit===ultimoRodape) return;
   ultimoRodape = unit;
   const track = $("#tickerTrack"), box = $("#ticker");
@@ -533,12 +565,15 @@ function renderRodape(){
 function relogio(){
   const d = new Date();
   $("#hora").textContent = d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-  $("#data").textContent = cap(d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
+  $("#data").textContent = cap(d.toLocaleDateString("pt-BR",{
+    weekday:"long",day:"numeric",month:"long",year:"numeric"
+  }));
 }
 
 /* ===== CENAS ===== */
 function avisosAtivos(){
-  const h = new Date(); h.setHours(0,0,0,0);
+  const h = new Date();
+  h.setHours(0,0,0,0);
   return S.avisos.filter(a=>isYes(a.ATIVO)&&(a.TITULO||a.TEXTO)).filter(a=>{
     const i=parseData(a.INICIO), f=parseData(a.FIM);
     if(i && h<i) return false;
@@ -552,9 +587,11 @@ function cenaAviso(a, alta){
   const n = texto.length;
   const fs = n<=80?4.2:n<=160?3.4:n<=300?2.7:2.1;
   const tipo = norm(a.TIPO);
-  const cls = (alta?"alta ":"")+(tipo==="URGENTE"?"tipo-urgente":tipo==="INFO"?"tipo-info":"");
+  const cls = (alta?"alta ":"")+
+    (tipo==="URGENTE"?"tipo-urgente":tipo==="INFO"?"tipo-info":"");
   const label = alta ? "Aviso importante" : (a.TIPO||"Aviso");
-  const dur = (alta ? cn("TEMPO_AVISO_IMPORTANTE_SEG",25) : cn("TEMPO_AVISO_NORMAL_SEG",15))*1000;
+  const dur = (alta ? cn("TEMPO_AVISO_IMPORTANTE_SEG",25) :
+    cn("TEMPO_AVISO_NORMAL_SEG",15))*1000;
   return {
     dur,
     html: '<div class="aviso '+cls+'"><div class="aviso-tag">'+esc(label)+"</div>"+
@@ -583,38 +620,45 @@ function cenaClima(){
   const dias = [1,2,3].filter(i=>d.time[i]).map(i=>{
     const [e] = WMO(d.weather_code[i]);
     const nome = new Date(d.time[i]+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long"});
-    return '<div class="dia"><div class="nome">'+esc(nome)+'</div><div class="emoji">'+e+'</div><div class="mm">'+
-      Math.round(d.temperature_2m_min[i])+"° / "+Math.round(d.temperature_2m_max[i])+'°</div><div class="chuva">Chuva: '+
+    return '<div class="dia"><div class="nome">'+esc(nome)+'</div><div class="emoji">'+e+
+      '</div><div class="mm">'+Math.round(d.temperature_2m_min[i])+"° / "+
+      Math.round(d.temperature_2m_max[i])+'°</div><div class="chuva">Chuva: '+
       (d.precipitation_probability_max[i]??0)+"%</div></div>";
   }).join("");
   return {
     dur: cn("TEMPO_INDICES_SEG",8)*1000,
     html: '<div class="titulo-cena">Previsão do tempo · '+esc(CLIMA_LOCAL.nome)+"</div>"+
-      '<div class="clima-main"><div class="clima-agora"><div class="emoji">'+em+'</div><div><div class="temp">'+
-      Math.round(c.temperature_2m)+'°</div><div class="desc">'+esc(desc)+"</div></div></div>"+
-      '<div class="clima-det"><div>Sensação<b>'+Math.round(c.apparent_temperature)+"°</b></div>"+
-      "<div>Umidade<b>"+Math.round(c.relative_humidity_2m)+"%</b></div>"+
-      "<div>Vento<b>"+Math.round(c.wind_speed_10m)+" km/h</b></div>"+
-      "<div>Hoje<b>"+Math.round(d.temperature_2m_min[0])+"° / "+Math.round(d.temperature_2m_max[0])+"°</b></div></div></div>"+
+      '<div class="clima-main"><div class="clima-agora"><div class="emoji">'+em+
+      '</div><div><div class="temp">'+Math.round(c.temperature_2m)+
+      '°</div><div class="desc">'+esc(desc)+"</div></div></div>"+
+      '<div class="clima-det"><div>Sensação<b>'+Math.round(c.apparent_temperature)+
+      "°</b></div><div>Umidade<b>"+Math.round(c.relative_humidity_2m)+
+      "%</b></div><div>Vento<b>"+Math.round(c.wind_speed_10m)+
+      " km/h</b></div><div>Hoje<b>"+Math.round(d.temperature_2m_min[0])+
+      "° / "+Math.round(d.temperature_2m_max[0])+"°</b></div></div></div>"+
       '<div class="clima-dias">'+dias+"</div>"
   };
 }
 
 function cenaMercado(){
   const m = S.mercado;
-  const brl = (v,dec) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v);
+  const brl = (v,dec) => new Intl.NumberFormat("pt-BR",{
+    style:"currency",currency:"BRL",minimumFractionDigits:dec,maximumFractionDigits:dec
+  }).format(v);
   const card = (nome,o,dec) => {
     if(!o) return "";
     const pct = parseFloat(o.pctChange);
     const cls = pct>=0 ? "up" : "down";
-    return '<div class="moeda"><div class="nome">'+nome+'</div><div class="valor">'+brl(parseFloat(o.bid),dec)+
-      '</div><div class="var '+cls+'">'+(pct>=0?"▲ ":"▼ ")+Math.abs(pct).toFixed(2).replace(".",",")+"%</div></div>";
+    return '<div class="moeda"><div class="nome">'+nome+'</div><div class="valor">'+
+      brl(parseFloat(o.bid),dec)+'</div><div class="var '+cls+'">'+
+      (pct>=0?"▲ ":"▼ ")+Math.abs(pct).toFixed(2).replace(".",",")+"%</div></div>";
   };
   return {
     dur: cn("TEMPO_INDICES_SEG",8)*1000,
     html: '<div class="titulo-cena">Mercado financeiro</div><div class="mercado-grid">'+
       card("Dólar",m.usd,2)+card("Euro",m.eur,2)+card("Bitcoin",m.btc,0)+"</div>"+
-      '<div class="rodinha">Atualizado às '+m.at.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+"</div>"
+      '<div class="rodinha">Atualizado às '+
+      m.at.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+"</div>"
   };
 }
 
@@ -623,6 +667,7 @@ function parseDataNoticia(s){
   if(/^\d{4}-\d\d-\d\d \d\d:\d\d/.test(s)) return new Date(s.replace(" ","T")+"Z");
   return new Date(s);
 }
+
 function haQuanto(s){
   const d = parseDataNoticia(s);
   if(!d || isNaN(d)) return "";
@@ -636,7 +681,7 @@ function haQuanto(s){
 }
 
 function cenasNoticias(){
-  const listas = S.noticias.map(p => p.items.map(it => ({...it, pacote:p.pacote, fonte:p.fonte})));
+  const listas = S.noticias.map(p=>p.items.map(it=>({...it,pacote:p.pacote,fonte:p.fonte})));
   const vistos = new Set(), out = [];
   let i=0, mais=true;
   while(mais){
@@ -663,7 +708,10 @@ function cenasNoticias(){
         (quando?'<div class="quando">'+quando+"</div>":"")+"</div></div>",
       mount: el=>{
         const img = el.querySelector(".noticia-img img");
-        if(img) img.onerror = ()=>{ img.parentNode.remove(); el.querySelector(".noticia").style.gridTemplateColumns="1fr"; };
+        if(img) img.onerror = ()=>{
+          img.parentNode.remove();
+          el.querySelector(".noticia").style.gridTemplateColumns="1fr";
+        };
       }
     };
   });
@@ -673,7 +721,7 @@ function cenasAniv(){
   const hoje = new Date();
   const mes = hoje.getMonth()+1;
   const lista = S.aniv.filter(r=>isYes(r.ATIVO)&&r.NOME)
-    .map(r=>({...r, d:parseData(r.DATA_NASCIMENTO)}))
+    .map(r=>({...r,d:parseData(r.DATA_NASCIMENTO)}))
     .filter(r=>r.d && r.d.getMonth()+1===mes)
     .sort((a,b)=>a.d.getDate()-b.d.getDate());
   if(!lista.length) return [];
@@ -682,13 +730,15 @@ function cenasAniv(){
   for(let p=0;p<paginas;p++){
     const cards = lista.slice(p*porPag,(p+1)*porPag).map(r=>{
       const ehHoje = r.d.getDate()===hoje.getDate();
-      return '<div class="aniv'+(ehHoje?" hoje":"")+'"><div class="dia-num">'+r.d.getDate()+'</div><div><div class="nome">'+
-        esc(r.NOME)+'</div><div class="setor">'+esc(r.SETOR||"")+"</div></div>"+
+      return '<div class="aniv'+(ehHoje?" hoje":"")+'"><div class="dia-num">'+r.d.getDate()+
+        '</div><div><div class="nome">'+esc(r.NOME)+'</div><div class="setor">'+
+        esc(r.SETOR||"")+"</div></div>"+
         (ehHoje?'<div class="hoje-tag">HOJE</div>':"")+"</div>";
     }).join("");
     cenas.push({
       dur: cn("TEMPO_ANIVERSARIANTES_SEG",15)*1000,
-      html: '<div class="titulo-cena">Aniversariantes de '+esc(nomeMes)+'</div><div class="aniv-grid">'+cards+"</div>"+
+      html: '<div class="titulo-cena">Aniversariantes de '+esc(nomeMes)+
+        '</div><div class="aniv-grid">'+cards+"</div>"+
         (paginas>1?'<div class="pagina">'+(p+1)+" / "+paginas+"</div>":"")
     });
   }
@@ -706,19 +756,21 @@ function cenaFunc(){
   const r = S.func.find(x=>isYes(x.ATIVO)&&x.NOME&&mesConfere(x.MES_REFERENCIA,hoje));
   if(!r) return null;
   const id = driveId(r.FOTO_LINK);
-  const foto = id ? "https://lh3.googleusercontent.com/d/"+id+"=w900" : (/^https?:\/\//i.test(r.FOTO_LINK||"")?r.FOTO_LINK:"");
+  const foto = id ? "https://lh3.googleusercontent.com/d/"+id+"=w900" :
+    (/^https?:\/\//i.test(r.FOTO_LINK||"")?r.FOTO_LINK:"");
   const ini = r.NOME.split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0]).join("").toUpperCase();
   const mesTxt = cap(hoje.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}));
   return {
     dur: cn("TEMPO_FUNC_MES_SEG",20)*1000,
-    html: '<div class="titulo-cena">Funcionário do mês</div><div class="func"><div class="func-foto">'+
-      (foto?'<img src="'+esc(foto)+'" alt="">':'<div class="ph">'+esc(ini)+"</div>")+'</div><div class="func-txt">'+
+    html: '<div class="titulo-cena">Funcionário do mês</div><div class="func">'+
+      '<div class="func-foto">'+(foto?'<img src="'+esc(foto)+'" alt="">':
+      '<div class="ph">'+esc(ini)+"</div>")+'</div><div class="func-txt">'+
       '<div class="mes">'+esc(mesTxt)+"</div><h1>"+esc(r.NOME)+"</h1>"+
       '<div class="cargo">'+esc([r.CARGO,r.SETOR].filter(Boolean).join(" · "))+"</div>"+
       (r.MOTIVO?'<div class="motivo">'+esc(r.MOTIVO)+"</div>":"")+"</div></div>",
     mount: el=>{
       const img = el.querySelector(".func-foto img");
-      if(img) img.onerror = ()=>{ img.parentNode.innerHTML = '<div class="ph">'+esc(ini)+"</div>"; };
+      if(img) img.onerror = ()=>{ img.parentNode.innerHTML='<div class="ph">'+esc(ini)+"</div>"; };
     }
   };
 }
@@ -728,12 +780,21 @@ function cenaFoto(f){
   const u1 = "https://lh3.googleusercontent.com/d/"+f.id+"=w1920";
   const u2 = "https://drive.google.com/thumbnail?id="+f.id+"&sz=w1920";
   return {
-    cls:"midia", html:'<div class="bg"></div><img class="fg" alt="">',
+    cls:"midia",
+    html:'<div class="bg"></div><img class="fg" alt="">',
     run: el => new Promise(res=>{
       const img=el.querySelector("img"), bg=el.querySelector(".bg");
       let ok=false, fb=false;
-      img.onload = ()=>{ if(ok) return; ok=true; bg.style.backgroundImage='url("'+img.src+'")'; setTimeout(res,dur); };
-      img.onerror = ()=>{ if(!fb){ fb=true; img.src=u2; } else res(); };
+      img.onload = ()=>{
+        if(ok) return;
+        ok=true;
+        bg.style.backgroundImage='url("'+img.src+'")';
+        setTimeout(res,dur);
+      };
+      img.onerror = ()=>{
+        if(!fb){ fb=true; img.src=u2; }
+        else res();
+      };
       img.src = u1;
       setTimeout(()=>{ if(!ok) res(); },20000);
     })
@@ -742,7 +803,9 @@ function cenaFoto(f){
 
 function cenaVideo(f){
   return {
-    cls:"midia", max:900000, html:'<video playsinline preload="auto"></video>',
+    cls:"midia",
+    max:900000,
+    html:'<video playsinline preload="auto"></video>',
     run: async el=>{
       radioSuspender(true);
       try{
@@ -751,15 +814,23 @@ function cenaVideo(f){
           let fim=false, tocou=false, fb=false;
           const sair = ()=>{ if(!fim){ fim=true; res(); } };
           const fallback = ()=>{
-            if(fb||fim) return; fb=true;
-            el.innerHTML = '<iframe src="https://drive.google.com/file/d/'+f.id+'/preview" allow="autoplay"></iframe>';
+            if(fb||fim) return;
+            fb=true;
+            el.innerHTML='<iframe src="https://drive.google.com/file/d/'+f.id+
+              '/preview" allow="autoplay"></iframe>';
             setTimeout(sair,45000);
           };
           v.onplaying = ()=>{ tocou=true; };
-          v.onended = sair; v.onerror = fallback;
-          v.src = "https://www.googleapis.com/drive/v3/files/"+f.id+"?alt=media&key="+DRIVE_API_KEY;
+          v.onended = sair;
+          v.onerror = fallback;
+          v.src = "https://www.googleapis.com/drive/v3/files/"+f.id+
+            "?alt=media&key="+DRIVE_API_KEY;
           const p = v.play();
-          if(p&&p.catch) p.catch(()=>{ v.muted=true; const q=v.play(); if(q&&q.catch) q.catch(()=>{}); });
+          if(p&&p.catch) p.catch(()=>{
+            v.muted=true;
+            const q=v.play();
+            if(q&&q.catch) q.catch(()=>{});
+          });
           setTimeout(()=>{ if(!tocou) fallback(); },25000);
         });
       } finally { radioSuspender(false); }
@@ -769,9 +840,14 @@ function cenaVideo(f){
 
 function cenaSlides(f,t){
   const url = t==="slides"
-    ? "https://docs.google.com/presentation/d/"+f.id+"/embed?start=true&loop=true&delayms=5000&rm=minimal"
+    ? "https://docs.google.com/presentation/d/"+f.id+
+      "/embed?start=true&loop=true&delayms=5000&rm=minimal"
     : "https://drive.google.com/file/d/"+f.id+"/preview";
-  return { cls:"midia", dur:cn("TEMPO_SLIDES_SEG",60)*1000, html:'<iframe src="'+esc(url)+'" allow="autoplay; fullscreen"></iframe>' };
+  return {
+    cls:"midia",
+    dur:cn("TEMPO_SLIDES_SEG",60)*1000,
+    html:'<iframe src="'+esc(url)+'" allow="autoplay; fullscreen"></iframe>'
+  };
 }
 
 function cenasMidia(){
@@ -783,28 +859,34 @@ function cenasMidia(){
 
 const cenaVazia = () => ({
   dur:6000,
-  html: '<div class="centro"><img src="Logo.jpg" alt="" onerror="this.style.display=\'none\'"><div>Juanil Transportes e Locações</div></div>'
+  html:'<div class="centro"><img src="Logo.jpg" alt="" onerror="this.style.display=\'none\'">'+
+    '<div>Juanil Transportes e Locações</div></div>'
 });
 
 /* ===== PLAYLIST E MOTOR ===== */
 function montarPlaylist(){
   const base=[], normais=[], altas=[];
   if(cb("MOSTRAR_AVISOS",true)){
-    avisosAtivos().forEach(a => (norm(a.PRIORIDADE)==="ALTA"?altas:normais).push(a));
+    avisosAtivos().forEach(a=>
+      (norm(a.PRIORIDADE)==="ALTA"?altas:normais).push(a)
+    );
   }
-  normais.forEach(a => base.push(cenaAviso(a,false)));
+  normais.forEach(a=>base.push(cenaAviso(a,false)));
   if(cb("MOSTRAR_INDICES",true)){
     if(S.clima) base.push(cenaClima());
     if(S.mercado) base.push(cenaMercado());
   }
   if(cb("MOSTRAR_NOTICIAS",true)) cenasNoticias().forEach(c=>base.push(c));
   if(cb("MOSTRAR_ANIVERSARIANTES",true)) cenasAniv().forEach(c=>base.push(c));
-  if(cb("MOSTRAR_FUNC_MES",true)){ const c=cenaFunc(); if(c) base.push(c); }
+  if(cb("MOSTRAR_FUNC_MES",true)){
+    const c=cenaFunc();
+    if(c) base.push(c);
+  }
   if(cb("MOSTRAR_MIDIA_DRIVE",true)) cenasMidia().forEach(c=>base.push(c));
 
   if(!altas.length) return base;
   if(!base.length) return altas.map(a=>cenaAviso(a,true));
-  const n = Math.max(1, Math.round(cn("AVISO_IMPORTANTE_REPETE_A_CADA",3)));
+  const n = Math.max(1,Math.round(cn("AVISO_IMPORTANTE_REPETE_A_CADA",3)));
   const out=[];
   base.forEach((sc,i)=>{
     if(i%n===0) out.push(cenaAviso(altas[altaPtr++%altas.length],true));
@@ -814,14 +896,25 @@ function montarPlaylist(){
 }
 
 const stage = $("#stage");
+
 function limparCena(el){
-  el.querySelectorAll("video").forEach(v=>{ v.onerror=null; v.onended=null; v.pause(); v.removeAttribute("src"); });
+  el.querySelectorAll("video").forEach(v=>{
+    v.onerror=null;
+    v.onended=null;
+    v.pause();
+    v.removeAttribute("src");
+  });
   el.querySelectorAll("iframe").forEach(f=>{ f.src="about:blank"; });
 }
 
 async function playScene(sc){
   const old = stage.firstElementChild;
-  if(old){ old.classList.remove("on"); await sleep(450); limparCena(old); old.remove(); }
+  if(old){
+    old.classList.remove("on");
+    await sleep(450);
+    limparCena(old);
+    old.remove();
+  }
   const el = document.createElement("div");
   el.className = "scene "+(sc.cls||"");
   el.innerHTML = sc.html;
@@ -829,7 +922,7 @@ async function playScene(sc){
   if(sc.mount) sc.mount(el);
   await sleep(40);
   el.classList.add("on");
-  if(sc.run) await Promise.race([sc.run(el), sleep(sc.max||600000)]);
+  if(sc.run) await Promise.race([sc.run(el),sleep(sc.max||600000)]);
   else await sleep(sc.dur);
 }
 
@@ -843,12 +936,16 @@ async function ciclo(){
         if(v !== versionUrgent) break;
         await playScene(sc);
       }
-    }catch(e){ console.error(e); await sleep(3000); }
+    }catch(e){
+      console.error(e);
+      await sleep(3000);
+    }
   }
 }
 
 /* ===== AUTO-ATUALIZAÇÃO ===== */
 let versaoBase = null;
+
 async function checarVersao(){
   try{
     const t = await fetchText(location.origin+location.pathname+"?v="+Date.now(),15000);
@@ -870,31 +967,49 @@ function recargaDiaria(){
 }
 
 /* ===== INÍCIO ===== */
-const seguro = fn => () => { Promise.resolve().then(fn).catch(e=>console.warn(e.message)); };
+const seguro = fn => () => {
+  Promise.resolve().then(fn).catch(e=>console.warn(e.message));
+};
 
 (async function iniciar(){
-  relogio(); setInterval(relogio,1000);
+  relogio();
+  setInterval(relogio,1000);
 
-  await Promise.race([
-    Promise.allSettled([updControle(), updSheets(), updNoticias(), updClima(), updMercado(), updMidia()]),
-    sleep(20000)
+  // Lê primeiro o comando do Drive.
+  // A rádio só inicia se RADIO estiver ligada na planilha.
+  try{
+    await Promise.race([
+      updControle(),
+      sleep(15000)
+    ]);
+  }catch(e){
+    console.warn("Não foi possível ler o controle da rádio:",e.message);
+  }
+
+  // Repetições de inicialização inspiradas no painel antigo.
+  setTimeout(aplicarRadio,1500);
+  setTimeout(aplicarRadio,6000);
+  setTimeout(aplicarRadio,12000);
+
+  // Os demais conteúdos carregam em paralelo, sem segurar a rádio.
+  Promise.allSettled([
+    updSheets(),
+    updNoticias(),
+    updClima(),
+    updMercado(),
+    updMidia()
   ]);
 
-  // Garante a rádio logo no início
-  setTimeout(aplicarRadio, 1500);
-  setTimeout(aplicarRadio, 4000);
-  setTimeout(aplicarRadio, 8000);
+  setInterval(seguro(updControle),30*1000);
+  setInterval(seguro(updSheets),60*1000);
+  setInterval(seguro(updMercado),3*60*1000);
+  setInterval(seguro(updNoticias),10*60*1000);
+  setInterval(seguro(updMidia),10*60*1000);
+  setInterval(seguro(updClima),15*60*1000);
+  setInterval(seguro(checarVersao),5*60*1000);
+  setInterval(recargaDiaria,60*1000);
 
-  setInterval(seguro(updControle), 30*1000);
-  setInterval(seguro(updSheets), 60*1000);
-  setInterval(seguro(updMercado), 3*60*1000);
-  setInterval(seguro(updNoticias), 10*60*1000);
-  setInterval(seguro(updMidia), 10*60*1000);
-  setInterval(seguro(updClima), 15*60*1000);
-  setInterval(seguro(checarVersao), 5*60*1000);
-  setInterval(recargaDiaria, 60*1000);
   checarVersao();
-
   ciclo();
 })();
 })();
