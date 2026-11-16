@@ -25,13 +25,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:.8r
 
 footer{border-top:.15rem solid var(--accent);background:#0006;height:3.2rem;display:flex;align-items:center;overflow:hidden}#ticker{flex:1;overflow:hidden;white-space:nowrap}#tickerTrack{display:flex;width:max-content;animation:tick linear infinite}.ticker-group{display:flex;flex-shrink:0}.ticker-item{font-size:1.25rem;padding-right:2.5rem}.ticker-item b{background:var(--accent);color:#111;padding:.1rem .6rem;border-radius:.3rem;margin-right:.6rem}@keyframes tick{to{transform:translateX(-50%)}}
 @media(max-aspect-ratio:4/3){html{font-size:min(1vw,1.65vh)}header{padding:.7rem 1rem}.scene{padding:1rem 1.2rem}}
+header{position:relative}.marca>div{position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap}
 </style>
 </head>
 <body>
 <header>
   <div class="marca"><img id="logo" src="Logo.jpg" alt="Juanil" onerror="this.style.display='none'"><div><h1>JUANIL</h1><small>Transportes e Locações</small></div></div>
-  <div id="radioTag" hidden>♪ JB FM</div>
-  <button id="radioButton" class="radio-btn" type="button">▶ ATIVAR SOM</button>
   <div class="relogio"><div><div id="hora">--:--</div><div id="data"></div></div></div>
 </header>
 <main id="stage"><div class="scene on"><div class="center"><img src="Logo.jpg" alt="" onerror="this.style.display='none'"><div>Carregando painel…</div></div></div></main>
