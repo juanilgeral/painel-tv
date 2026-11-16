@@ -59,60 +59,7 @@ function parseDate(s){s=String(s||'').trim();let m=s.match(/(\d{1,2})\/(\d{1,2})
 function driveId(s){const m=String(s||'').match(/\/d\/([\w-]{20,})/)||String(s||'').match(/[?&]id=([\w-]{20,})/);return m?m[1]:null}
 const S={ctrl:{},avisos:[],noticias:[],aniv:[],func:[],rodape:[],midia:[],clima:null,mercado:null};
 const cv=(k,d)=>S.ctrl[k]!==undefined&&S.ctrl[k]!==''?S.ctrl[k]:d, cn=(k,d)=>{const n=parseFloat(String(cv(k,d)).replace(',','.'));return isNaN(n)?d:n}, cb=(k,d=true)=>yes(cv(k,d?'SIM':'NAO'));
-/* Rádio: a aba CONTROLE é a autoridade; o botão apenas libera o áudio quando o navegador exige interação. */
-const audio=document.createElement('audio');audio.preload='auto';audio.autoplay=true;audio.setAttribute('playsinline','');audio.style.display='none';document.body.appendChild(audio);
-const RADIO_TIMER_KEY='juanil_radio_timer_v2';
-let radioDrive=null,radioSusp=false,radioExpired=false,radioMinutes=0,radioStartedAt=0,radioTries=0,radioTimer=null,radioLast=Date.now(),radioTime=-1;
-const radioAllowed=()=>!radioSusp&&!radioExpired&&radioDrive===true;
-function radioTag(text){const e=$('#radioTag');e.hidden=!text;e.textContent=text||''}
-function buttonState(){const b=$('#radioButton');if(!b)return;b.textContent=radioDrive===false?'JB FM DESLIGADA':radioExpired?'TEMPO ENCERRADO':!audio.paused?'♪ JB FM TOCANDO':'▶ ATIVAR SOM';b.classList.toggle('off',radioDrive===false||radioExpired);b.disabled=radioDrive!==true||radioExpired||!audio.paused;}
-function stopRadio(){clearTimeout(radioTimer);try{audio.pause();audio.removeAttribute('src');audio.load()}catch(e){}buttonState()}
-function savedRadioTimer(){try{return JSON.parse(localStorage.getItem(RADIO_TIMER_KEY)||'null')}catch(e){return null}}
-function saveRadioTimer(state){try{localStorage.setItem(RADIO_TIMER_KEY,JSON.stringify(state))}catch(e){}}
-function syncRadioTimer(isOn,minutes){const n=Number(minutes);radioMinutes=Number.isFinite(n)?Math.max(0,n):0;let state=savedRadioTimer();if(!isOn){state={on:false,startedAt:0,minutes:radioMinutes};radioStartedAt=0;radioExpired=false;saveRadioTimer(state);return}if(!state||!state.on||!Number(state.startedAt)){state={on:true,startedAt:Date.now(),minutes:radioMinutes}}else{state={on:true,startedAt:Number(state.startedAt),minutes:radioMinutes}}radioStartedAt=state.startedAt;radioExpired=radioMinutes>0&&Date.now()-radioStartedAt>=radioMinutes*60000;saveRadioTimer(state)}
-function unmuteOnGesture(){
-  const go=()=>{
-    audio.muted=false;
-    audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));
-    radioTag('♪ JB FM AO VIVO');
-    document.removeEventListener('pointerdown',go);
-    document.removeEventListener('keydown',go);
-  };
-  document.addEventListener('pointerdown',go);
-  document.addEventListener('keydown',go);
-}
-function startRadio(){
-  if(!radioAllowed()){
-    if(radioExpired) radioTag('JB FM · tempo configurado encerrado');
-    buttonState();
-    return;
-  }
-  audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));
-  audio.muted=false;
-  if(!audio.src){
-    radioTries++;
-    audio.src=radioTries>1?RADIO_URL+(RADIO_URL.includes('?')?'&':'?')+'t='+Date.now():RADIO_URL;
-    try{audio.load()}catch(e){}
-  }
-  let p;
-  try{p=audio.play()}catch(e){p=Promise.reject(e)}
-  if(p?.then){
-    p.then(()=>{
-      radioTag('♪ JB FM AO VIVO');
-    }).catch(err=>{
-      console.warn('JB FM:',err.name,err.message);
-      radioTag('JB FM conectando…');
-      clearTimeout(radioTimer);
-      radioTimer=setTimeout(startRadio,3000);
-    });
-  }
-  buttonState();
-}
-function applyRadio(){if(radioDrive===false){stopRadio();radioTag('');return}if(radioExpired){stopRadio();radioTag('JB FM · tempo configurado encerrado');return}if(radioAllowed()){audio.volume=Math.max(0,Math.min(1,cn('RADIO_VOLUME',50)/100));if(audio.paused)startRadio()}buttonState()}
-function checkRadioDeadline(){if(radioDrive!==true||!radioStartedAt||radioMinutes<=0||radioExpired)return;if(Date.now()-radioStartedAt>=radioMinutes*60000){radioExpired=true;saveRadioTimer({on:true,startedAt:radioStartedAt,minutes:radioMinutes});stopRadio();radioTag('JB FM · tempo configurado encerrado')}}
-$('#radioButton').addEventListener('click',()=>{if(radioDrive!==true){radioTag('Ligue RADIO na planilha para permitir a JB FM');return}if(radioExpired){radioTag('JB FM · tempo configurado encerrado; desligue e ligue RADIO na planilha para reiniciar');return}startRadio()});
-audio.addEventListener('playing',()=>{radioTries=0;radioLast=Date.now();radioTag('♪ JB FM AO VIVO');buttonState()});audio.addEventListener('waiting',()=>radioTag('♪ JB FM conectando…'));audio.addEventListener('timeupdate',()=>{if(audio.currentTime!==radioTime){radioTime=audio.currentTime;radioLast=Date.now()}});audio.addEventListener('error',()=>{if(radioAllowed()){radioTag('JB FM tentando reconectar…');clearTimeout(radioTimer);radioTimer=setTimeout(()=>{audio.removeAttribute('src');startRadio()},4000)}});audio.addEventListener('pause',buttonState);
-async function updateControl(){const rows=await loadRaw('CONTROLE'),c={};rows.forEach(r=>{const k=norm(r[0]).replace(/\s+/g,'_');if(k&&k!=='CHAVE')c[k]=String(r[1]??'').trim()});S.ctrl=c;radioDrive=yes(c.RADIO);syncRadioTimer(radioDrive,cn('TEMPO_RADIO_MIN',0));applyRadio();checkReloadCommand()}
+async function updateControl(){const rows=await loadRaw('CONTROLE'),c={};rows.forEach(r=>{const k=norm(r[0]).replace(/\s+/g,'_');if(k&&k!=='CHAVE')c[k]=String(r[1]??'').trim()});S.ctrl=c;checkReloadCommand()}
 /* Datas comemorativas curadas para 2026; revise a lista anualmente. */
 const COMMEMORATIVE_2026={
 '01-01':'Confraternização Universal','01-07':'Dia do Leitor','01-20':'Dia do Farmacêutico','02-04':'Dia Mundial do Câncer','02-16':'Carnaval (ponto facultativo)','02-17':'Carnaval (ponto facultativo)','03-08':'Dia Internacional da Mulher','03-15':'Dia do Consumidor','03-20':'Início do outono','03-22':'Dia Mundial da Água','04-02':'Dia Mundial de Conscientização do Autismo','04-03':'Sexta-feira Santa','04-05':'Páscoa','04-07':'Dia Mundial da Saúde','04-21':'Tiradentes','04-22':'Dia da Terra','05-01':'Dia do Trabalho','05-10':'Dia das Mães','05-15':'Dia Internacional da Família','06-05':'Dia Mundial do Meio Ambiente','06-12':'Dia dos Namorados','06-21':'Início do inverno','07-20':'Dia do Amigo','08-09':'Dia dos Pais','08-11':'Dia do Estudante','09-07':'Independência do Brasil','09-21':'Dia da Árvore','09-22':'Início da primavera','10-12':'Nossa Senhora Aparecida / Dia das Crianças','10-15':'Dia dos Professores','10-31':'Dia das Bruxas','11-02':'Finados','11-15':'Proclamação da República','11-20':'Dia da Consciência Negra','12-21':'Início do verão','12-25':'Natal','12-31':'Véspera de Ano-Novo'};
@@ -148,7 +95,7 @@ let baseHash='';function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.ch
 let dailyMark='';function dailyReload(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hourCycle:'h23'}).formatToParts(new Date());const o=Object.fromEntries(parts.map(p=>[p.type,p.value]));const day=o.year+'-'+o.month+'-'+o.day;if(o.hour==='04'&&dailyMark!==day){dailyMark=day;location.reload()}}
 async function updateSheets(){const names=['AVISOS','ANIVERSARIOS','FUNCIONARIO_MES','RODAPE'];const results=await Promise.allSettled(names.map(load));results.forEach((r,i)=>{if(r.status!=='fulfilled'){console.warn('Aba '+names[i]+':',r.reason?.message||r.reason);return}if(names[i]==='AVISOS')S.avisos=r.value;else if(names[i]==='ANIVERSARIOS')S.aniv=r.value;else if(names[i]==='FUNCIONARIO_MES')S.func=r.value;else if(names[i]==='RODAPE')S.rodape=r.value});renderTicker()}
 const safe=f=>()=>Promise.resolve().then(f).catch(e=>console.warn(e.message));
-(async()=>{clock();setInterval(clock,1000);try{await Promise.race([updateControl(),sleep(12000)])}catch(e){console.warn('Controle da rádio indisponível:',e.message)}setTimeout(applyRadio,1500);setTimeout(applyRadio,6000);setTimeout(applyRadio,12000);await Promise.allSettled([updateSheets(),updateNews(),updateWeather(),updateMarket(),updateMedia()]);setInterval(safe(updateControl),10000);setInterval(safe(updateSheets),60000);setInterval(safe(updateMarket),180000);setInterval(safe(updateNews),600000);setInterval(safe(updateMedia),600000);setInterval(safe(updateWeather),900000);setInterval(safe(checkVersion),300000);setInterval(dailyReload,60000);checkVersion();setInterval(checkRadioDeadline,1000);setInterval(()=>{if(radioAllowed()&&audio.paused)startRadio();else if(radioAllowed()&&Date.now()-radioLast>25000){audio.removeAttribute('src');radioTries=1;startRadio()}},12000);cycle()})();
+(async()=>{clock();setInterval(clock,1000);try{await Promise.race([updateControl(),sleep(12000)])}catch(e){console.warn('Controle da rádio indisponível:',e.message)}await Promise.allSettled([updateSheets(),updateNews(),updateWeather(),updateMarket(),updateMedia()]);setInterval(safe(updateControl),10000);setInterval(safe(updateSheets),60000);setInterval(safe(updateMarket),180000);setInterval(safe(updateNews),600000);setInterval(safe(updateMedia),600000);setInterval(safe(updateWeather),900000);setInterval(safe(checkVersion),300000);setInterval(dailyReload,60000);checkVersion();cycle()})();
 })();
 </script>
 </body>
